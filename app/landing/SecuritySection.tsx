@@ -1,82 +1,84 @@
 "use client";
 
-// Security 섹션 — 정적 + 신뢰감 (애니메이션 최소)
-const PILLARS = [
+// 정책 문구체 — 해명체 X. 정적, 신뢰감.
+const POLICIES = [
   {
-    emoji: "🔑",
-    title: "본인 API 키 직접 설정",
-    desc: "OpenAI, Gemini, Groq 키를 본인이 입력. AES-256-GCM으로 암호화 저장.",
-    detail: "lib/crypto.ts · APP_ENCRYPTION_KEY",
+    label: "데이터 처리 위치",
+    body: "API 키와 개인 데이터는 사용자의 실행 환경에서 처리됩니다.",
+    detail: "외부 서버로 전송되지 않으며, 셀프호스팅 시 본인 인프라에 보관됩니다.",
   },
   {
-    emoji: "🏠",
-    title: "개인 서버 실행 가능",
-    desc: "Lightsail / Docker / 본인 서버에 직접 설치. 코드는 GitHub MIT 라이선스.",
-    detail: "docker run hiailab/server",
+    label: "발송 정책",
+    body: "자동 생성된 답장은 즉시 발송되지 않으며, Gmail 임시보관함에서 사용자가 직접 확인 후 발송합니다.",
+    detail: "Gmail Drafts API만 사용하며, messages.send 권한은 요청하지 않습니다.",
   },
   {
-    emoji: "💾",
-    title: "민감 데이터는 사용자 환경에",
-    desc: "메일 본문은 분류·답장 직후 즉시 폐기. 본인 디렉토리에 메타데이터만.",
-    detail: ".hiailab/users/<email>/",
+    label: "권한 범위",
+    body: "최소 권한 원칙을 따릅니다. 각 에이전트는 필요한 OAuth scope만 요청합니다.",
+    detail: "Gmail Agent: gmail.readonly · gmail.compose / Calendar Agent: calendar.events",
   },
   {
-    emoji: "📜",
-    title: "실행 로그 + 권한 범위 확인",
-    desc: "처리한 메일 ID, 분류 결과, 답장 생성 시각을 로그로. OAuth scope도 투명.",
-    detail: "gmail.readonly + gmail.compose only",
+    label: "저장 정책",
+    body: "메일 본문은 분류·생성 직후 즉시 폐기됩니다. 메타데이터(메일 ID, 분류 결과)만 사용자 디렉토리에 기록됩니다.",
+    detail: "AES-256-GCM 암호화 적용. 키는 사용자가 지정한 APP_ENCRYPTION_KEY로 파생됩니다.",
   },
 ];
 
 export default function SecuritySection() {
   return (
-    <section className="relative py-32">
+    <section id="security" className="relative bg-[var(--background-soft)] py-32">
       <div className="mx-auto max-w-6xl px-5">
         <div className="text-center">
-          <span className="bm-chip-success">Security</span>
+          <span className="bm-chip-accent">Security &amp; Privacy</span>
           <h2 className="bm-hand mt-4 text-[36px] text-[var(--foreground)] sm:text-[52px]">
-            메일은 민감합니다.<br />
-            <span className="bm-grad-text">그래서 더 보수적으로</span>
+            데이터 처리 정책
           </h2>
           <p className="mx-auto mt-5 max-w-xl text-[14px] leading-relaxed text-[var(--foreground-soft)] sm:text-[16px]">
-            오픈소스로 코드 전체 공개. 본인이 통제할 수 있는 구조로 설계했습니다.
+            오픈소스로 코드 전체가 공개됩니다. 모든 처리는 사용자가 통제할 수 있는 범위 내에서 일어납니다.
           </p>
         </div>
 
-        <div className="mt-16 grid gap-4 sm:grid-cols-2">
-          {PILLARS.map((p, i) => (
-            <div key={i} className="bm-card p-7">
-              <div className="flex items-start gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[var(--accent-soft)] text-[24px]">
-                  {p.emoji}
-                </div>
-                <div className="flex-1">
-                  <h3 className="text-[16px] font-bold text-[var(--foreground)]">{p.title}</h3>
-                  <p className="mt-2 text-[13px] leading-relaxed text-[var(--foreground-soft)]">{p.desc}</p>
-                  <div className="mt-3 inline-block rounded-md border border-[var(--border-soft)] bg-[var(--background-soft)] px-2.5 py-1 mono text-[11px] text-[#a5b4fc]">
-                    {p.detail}
-                  </div>
-                </div>
+        <div className="mt-14 grid gap-px overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--border)] sm:grid-cols-2">
+          {POLICIES.map((p, i) => (
+            <div key={i} className="bg-[var(--background-elev)] p-7">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--accent)]">
+                {p.label}
               </div>
+              <p className="mt-3 text-[15px] leading-relaxed text-[var(--foreground)]">{p.body}</p>
+              <p className="mt-3 text-[12px] leading-relaxed text-[var(--foreground-muted)]">
+                {p.detail}
+              </p>
             </div>
           ))}
         </div>
 
-        {/* 약속 stripe */}
-        <div className="mt-10 rounded-2xl border border-[var(--border)] bg-[var(--background-elev)] p-6">
-          <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
-            {[
-              { v: "0", l: "자동 발송" },
-              { v: "0", l: "외부 데이터 전송" },
-              { v: "MIT", l: "오픈소스 라이선스" },
-              { v: "256", l: "AES-bit 암호화" },
-            ].map((s, i) => (
-              <div key={i} className="text-center">
-                <div className="bm-grad-text bm-hand text-[32px]">{s.v}</div>
-                <div className="mt-1 text-[11px] text-[var(--foreground-muted)]">{s.l}</div>
-              </div>
-            ))}
+        {/* 보안 stripe */}
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--background-elev)] px-6 py-4 text-[12px]">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[var(--foreground-soft)]">
+            <span className="flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-[var(--success)]" />
+              MIT License
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-[var(--success)]" />
+              No auto-send
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-[var(--success)]" />
+              AES-256-GCM
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-[var(--success)]" />
+              Self-hostable
+            </span>
           </div>
+          <a
+            href="https://github.com/sungpyo9053/hiailab/blob/main/docs/SECURITY.md"
+            target="_blank"
+            className="text-[var(--accent)] hover:underline"
+          >
+            보안 정책 전문 →
+          </a>
         </div>
       </div>
     </section>

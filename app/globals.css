@@ -48,7 +48,7 @@
   --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.5);
   --shadow-glow: 0 0 80px rgba(99, 102, 241, 0.25);
 
-  --gradient-hero: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+  --gradient-hero: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
   --gradient-blue: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
   --gradient-purple: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   --gradient-radial: radial-gradient(1200px at 50% -200px, rgba(99, 102, 241, 0.25), transparent 70%);
