@@ -1,14 +1,14 @@
 import { cookies } from "next/headers";
 import { NextRequest, NextResponse } from "next/server";
-import { exchangeCodeForTokens } from "@/lib/gmail";
-import { disconnectGmail } from "@/lib/gmail";
-import { getAppMode, isAdmin, getOwnerEmail } from "@/lib/mode";
-import { setSessionCookie } from "@/lib/session";
+import { getCurrentUser } from "@/lib/current-user";
+import { exchangeCodeForTokens, disconnectGmail } from "@/lib/gmail";
+import { getAppMode } from "@/lib/mode";
 
 export const runtime = "nodejs";
 
-// OAuth 콜백 — saas 모드에서는 이게 로그인 흐름 (cookie 발급).
-// self 모드는 단일 사용자라 cookie 없이 _self 에 토큰 저장.
+// OAuth 콜백 — Gmail 연결을 현재 로그인된 사용자의 디렉토리에 저장.
+// self 모드: _self
+// saas 모드: cookie 사용자 (로그인 안 됐으면 에러)
 export async function GET(req: NextRequest) {
   const url = new URL(req.url);
   const code = url.searchParams.get("code");
@@ -31,31 +31,30 @@ export async function GET(req: NextRequest) {
   jar.delete("hiailab_oauth_state");
 
   const mode = getAppMode();
-  // self 모드는 _self 에 저장, saas 는 응답 email 에 저장
-  const userIdHint = mode === "self" ? "_self" : null;
-  const tokens = await exchangeCodeForTokens(code, userIdHint);
-  if (!tokens) {
-    return NextResponse.redirect(`${appUrl}/?error=token_exchange_failed`);
-  }
 
   if (mode === "self") {
-    // OWNER_EMAIL 검증
+    // self 모드 — _self 에 저장
+    const tokens = await exchangeCodeForTokens(code, "_self");
+    if (!tokens) {
+      return NextResponse.redirect(`${appUrl}/?error=token_exchange_failed`);
+    }
     const owner = (process.env.OWNER_EMAIL || "").trim().toLowerCase();
     if (owner && tokens.email && tokens.email.toLowerCase() !== owner) {
       await disconnectGmail("_self");
       return NextResponse.redirect(`${appUrl}/?error=${encodeURIComponent("not_owner")}`);
     }
-    return NextResponse.redirect(`${appUrl}/?connected=1`);
+    return NextResponse.redirect(`${appUrl}/?gmail_connected=1`);
   }
 
-  // saas — cookie session 발급
-  if (!tokens.email) {
-    return NextResponse.redirect(`${appUrl}/?error=no_email`);
+  // saas 모드 — 반드시 로그인된 상태여야 함
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.redirect(`${appUrl}/login?error=${encodeURIComponent("Gmail 연결은 로그인 후 가능합니다.")}`);
   }
-  const role = isAdmin(tokens.email) || !getOwnerEmail() ? "admin" : "user";
-  // OWNER_EMAIL 미설정이면 첫 가입자 또는 모두 admin? 안전: OWNER_EMAIL 없으면 모두 user.
-  // 위 표현은 잘못 — 다시:
-  const finalRole = isAdmin(tokens.email) ? "admin" : "user";
-  await setSessionCookie(tokens.email, finalRole);
-  return NextResponse.redirect(`${appUrl}/?connected=1`);
+
+  const tokens = await exchangeCodeForTokens(code, user.id);
+  if (!tokens) {
+    return NextResponse.redirect(`${appUrl}/?error=token_exchange_failed`);
+  }
+  return NextResponse.redirect(`${appUrl}/?gmail_connected=1`);
 }

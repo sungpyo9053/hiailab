@@ -51,7 +51,7 @@ export default function CatalogClient() {
 
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
-    if (q.get("connected")) {
+    if (q.get("connected") || q.get("gmail_connected")) {
       setMsg("✓ Gmail 연결 완료");
       window.history.replaceState({}, "", "/");
       void refresh();
@@ -93,7 +93,7 @@ export default function CatalogClient() {
     return <div className="bm-card p-8 text-center text-sm text-[var(--foreground-muted)]">로딩 중…</div>;
   }
 
-  // saas + 미로그인 → 히어로 로그인
+  // saas + 미로그인 → 회원가입/로그인 히어로
   if (me.mode === "saas" && !me.user) {
     return (
       <section className="bm-card-hero p-12 text-center">
@@ -102,16 +102,20 @@ export default function CatalogClient() {
           메일 자동화, <span className="text-[var(--hot)]">자판기처럼</span> 골라 쓰세요
         </h2>
         <p className="mt-4 text-[15px] leading-relaxed text-[var(--foreground-soft)]">
-          본인 Gmail로 로그인하면 자동화 에이전트들을 활성화할 수 있어요.
+          가입 후 본인 Gmail을 연동하면 자동 답장 초안이 임시보관함에 자동으로 만들어져요.
           <br />
-          메일 내용은 본인 계정 안에서만 처리되고{" "}
-          <b className="text-[var(--foreground)]">자동 발송은 절대 일어나지 않아요.</b>
+          <b className="text-[var(--foreground)]">자동 발송은 절대 일어나지 않아요.</b> 본인이 검토 후 보내기만.
         </p>
-        <a href="/api/gmail/auth" className="bm-btn-hot mt-8 inline-flex items-center gap-2">
-          📨 Gmail로 시작하기
-        </a>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+          <Link href="/signup" className="bm-btn-hot">
+            ✨ 무료로 시작하기
+          </Link>
+          <Link href="/login" className="bm-btn-secondary">
+            로그인
+          </Link>
+        </div>
         <p className="mt-4 text-xs text-[var(--foreground-muted)]">
-          받은편지함 읽기 · 임시보관함 작성 권한을 허락하면 즉시 시작됩니다.
+          이메일/비밀번호로 가입 → Gmail 연동은 가입 후 한 번 클릭.
         </p>
         {msg && <p className="mt-4 text-xs text-[var(--warning)]">{msg}</p>}
       </section>
