@@ -51,11 +51,48 @@
   --shadow-lg: 0 20px 44px rgba(45, 42, 54, 0.1);
 }
 
+html {
+  color-scheme: light;
+}
 html,
 body {
   background: var(--background);
   color: var(--foreground);
   min-height: 100%;
+}
+
+/* 시스템 다크 모드여도 form 요소가 다크로 칠해지지 않도록 강제 */
+input,
+textarea,
+select,
+button {
+  color: var(--foreground);
+  background-color: transparent;
+  -webkit-text-fill-color: var(--foreground);
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--foreground-muted);
+  opacity: 1;
+}
+/* 폼 input 배경은 흰색으로 강제 (다크 모드 자동 반전 막기) */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+input[type="url"],
+input[type="number"],
+textarea {
+  background-color: #ffffff !important;
+  -webkit-text-fill-color: var(--foreground);
+}
+/* Chrome autofill 노란 배경 회피 */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--foreground);
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset;
+  caret-color: var(--foreground);
 }
 
 body {
