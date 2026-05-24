@@ -2,53 +2,57 @@
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/static/pretendard.css");
 
 /* =========================================================
-   HI AI LAB — 우리만의 톤 (배민/노션/Linear 와 겹치지 않게)
-   Background : #FAF7F5 (살짝 따뜻한 크림 화이트)
-   Primary    : #2D2A36 (딥 차콜) — 진중
-   Accent     : #FF6F61 (코랄) — 친근 + 활기
-   Highlight  : #F5C147 (옅은 골드) — HI 환영
+   HI AI LAB — ncloud의 단정함 + 2026 트렌드 (Bento / Glass / Big Bold / Animated)
+   Primary    : #7C3AED (Violet 600) — AI 시그니처
+   Hot        : #EC4899 (Pink 500) — 포인트 그라데이션 끝점
+   Background : #FFFFFF + #F7F7FB (옅은 라일락)
    ========================================================= */
 
 :root {
-  --background: #faf7f5;
-  --background-soft: #f1ece6;
+  --background: #ffffff;
+  --background-soft: #f7f7fb;
+  --background-deep: #efeff5;
   --background-card: #ffffff;
 
-  --foreground: #2d2a36;
-  --foreground-soft: #5b566a;
-  --foreground-muted: #9b96a8;
+  --foreground: #16171a;
+  --foreground-soft: #555c66;
+  --foreground-muted: #98a0a8;
 
-  /* Primary — 딥 차콜 */
-  --accent: #2d2a36;
-  --accent-strong: #181620;
-  --accent-deep: #08070d;
-  --accent-soft: #ecebef;
+  /* Primary — Vivid Violet (AI 톤) */
+  --accent: #7c3aed;
+  --accent-strong: #6d28d9;
+  --accent-deep: #4c1d95;
+  --accent-soft: #f1ebff;
   --accent-foreground: #ffffff;
 
-  /* Hot Accent — 코랄 (강조 액션) */
-  --hot: #ff6f61;
-  --hot-strong: #e85a4d;
-  --hot-soft: #ffe9e6;
-  --hot-foreground: #7a1d12;
+  /* Hot Accent — Pink (그라데이션 끝점 / CTA) */
+  --hot: #ec4899;
+  --hot-strong: #db2777;
+  --hot-soft: #fce7f3;
+  --hot-foreground: #831843;
 
-  /* Warm — 골드 (살짝 환영 톤) */
-  --warm: #f5c147;
-  --warm-strong: #d9a52a;
-  --warm-soft: #fff5d6;
-  --warm-foreground: #6b4a00;
+  /* Warm — Blue (보조) */
+  --warm: #3b82f6;
+  --warm-strong: #2563eb;
+  --warm-soft: #e0eaff;
+  --warm-foreground: #1e3a8a;
 
-  --success: #14a37f;
-  --success-soft: #d9f5ec;
+  --success: #10b981;
+  --success-soft: #d1fae5;
   --warning: #f59e0b;
   --warning-soft: #fef3c7;
   --danger: #e5484d;
   --danger-soft: #ffe4e5;
 
-  --border: #e9e4dd;
-  --border-soft: #f1ece6;
-  --shadow-sm: 0 1px 2px rgba(45, 42, 54, 0.04);
-  --shadow: 0 6px 18px rgba(45, 42, 54, 0.07);
-  --shadow-lg: 0 20px 44px rgba(45, 42, 54, 0.1);
+  --border: #e5e7eb;
+  --border-soft: #f0f2f4;
+  --shadow-sm: 0 1px 2px rgba(20, 20, 50, 0.04);
+  --shadow: 0 4px 14px rgba(20, 20, 50, 0.07);
+  --shadow-lg: 0 16px 40px rgba(20, 20, 50, 0.1);
+
+  /* AI 시그니처 그라데이션 */
+  --gradient-hero: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
+  --gradient-soft: linear-gradient(180deg, #f1ebff 0%, #ffffff 100%);
 }
 
 html {
@@ -61,7 +65,7 @@ body {
   min-height: 100%;
 }
 
-/* 시스템 다크 모드여도 form 요소가 다크로 칠해지지 않도록 강제 */
+/* 폼 요소 다크 모드 자동 반전 방지 */
 input,
 textarea,
 select,
@@ -75,7 +79,6 @@ textarea::placeholder {
   color: var(--foreground-muted);
   opacity: 1;
 }
-/* 폼 input 배경은 흰색으로 강제 (다크 모드 자동 반전 막기) */
 input[type="text"],
 input[type="email"],
 input[type="password"],
@@ -86,7 +89,6 @@ textarea {
   background-color: #ffffff !important;
   -webkit-text-fill-color: var(--foreground);
 }
-/* Chrome autofill 노란 배경 회피 */
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
@@ -112,15 +114,62 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-/* ncloud 풍 — 손글씨 X. 헤딩도 Pretendard ExtraBold */
-.bm-hand {
+
+/* === 영웅 헤드라인 (Big Bold) === */
+.bm-hand,
+.bm-hero {
   font-family: "Pretendard Variable", Pretendard, system-ui, sans-serif;
   font-weight: 800;
   letter-spacing: -0.028em;
-  line-height: 1.15;
+  line-height: 1.1;
 }
 
-/* === 카드 — ncloud 풍 깔끔한 SaaS === */
+/* === 그라데이션 텍스트 === */
+.bm-grad-text {
+  background: var(--gradient-hero);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* === Glassmorphism (sticky nav) === */
+.bm-glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid rgba(229, 231, 235, 0.6);
+}
+
+/* === Bento Cards === */
+.bm-bento {
+  border-radius: 20px;
+  background: var(--background-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s, border-color 0.25s;
+  overflow: hidden;
+}
+.bm-bento:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
+}
+.bm-bento-hero {
+  border-radius: 20px;
+  background: var(--gradient-hero);
+  color: white;
+  box-shadow: 0 20px 60px rgba(124, 58, 237, 0.35);
+  overflow: hidden;
+}
+.bm-bento-soft {
+  border-radius: 20px;
+  background: var(--accent-soft);
+  border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+  box-shadow: var(--shadow-sm);
+}
+
+/* === 일반 카드 (ncloud 풍) === */
 .bm-card {
   background: var(--background-card);
   border: 1px solid var(--border);
@@ -129,7 +178,7 @@ body {
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 .bm-card:hover {
-  border-color: var(--accent);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
   box-shadow: var(--shadow);
 }
 .bm-card-soft {
@@ -138,17 +187,36 @@ body {
   border-radius: 12px;
 }
 .bm-card-hero {
-  background: linear-gradient(180deg, var(--accent-soft) 0%, #ffffff 100%);
+  background: var(--gradient-soft);
   border: 1px solid var(--border);
   border-radius: 16px;
   box-shadow: var(--shadow);
+}
+
+/* === Animated background blob === */
+.bm-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.55;
+  pointer-events: none;
+  animation: bm-blob-float 18s ease-in-out infinite;
+}
+@keyframes bm-blob-float {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(40px, -60px) scale(1.15); }
+  66% { transform: translate(-30px, 40px) scale(0.92); }
+}
+@keyframes bm-blob-float-slow {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(-50px, 30px) scale(1.1); }
 }
 
 /* === 버튼 === */
 .bm-btn-primary {
   background: var(--accent);
   color: #ffffff;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 11px 22px;
   font-weight: 700;
   font-size: 14px;
@@ -157,8 +225,8 @@ body {
   box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 .bm-btn-primary:hover {
-  filter: brightness(1.18);
-  box-shadow: 0 4px 14px rgba(45, 42, 54, 0.25);
+  filter: brightness(1.08);
+  box-shadow: 0 6px 20px color-mix(in srgb, var(--accent) 40%, transparent);
 }
 .bm-btn-primary:active {
   transform: translateY(1px);
@@ -171,11 +239,11 @@ body {
   filter: none;
 }
 
-/* Hot 버튼 — 대표 CTA (그린) */
+/* Hot 버튼 — 대표 CTA (그라데이션) */
 .bm-btn-hot {
-  background: var(--accent);
+  background: var(--gradient-hero);
   color: #ffffff;
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 12px 24px;
   font-weight: 700;
   font-size: 14px;
@@ -185,7 +253,7 @@ body {
 }
 .bm-btn-hot:hover {
   filter: brightness(1.06);
-  box-shadow: 0 6px 20px color-mix(in srgb, var(--hot) 45%, transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--hot) 45%, transparent);
 }
 .bm-btn-hot:active {
   transform: translateY(1px);
@@ -195,7 +263,7 @@ body {
   background: #ffffff;
   color: var(--foreground);
   border: 1px solid var(--border);
-  border-radius: 8px;
+  border-radius: 10px;
   padding: 10px 18px;
   font-weight: 600;
   font-size: 13px;
@@ -203,27 +271,21 @@ body {
 }
 .bm-btn-secondary:hover {
   background: var(--background-soft);
-  border-color: var(--foreground-muted);
+  border-color: var(--accent);
+  color: var(--accent-deep);
 }
 
 .bm-btn-warm {
   background: var(--warm);
-  color: var(--warm-foreground);
-  border-radius: 14px;
+  color: #ffffff;
+  border-radius: 10px;
   padding: 10px 18px;
   font-weight: 700;
   font-size: 13px;
   border: 1px solid var(--warm-strong);
 }
 .bm-btn-warm:hover {
-  filter: brightness(1.04);
-}
-
-/* === 영웅 헤드라인 === */
-.bm-hero {
-  font-weight: 800;
-  letter-spacing: -0.028em;
-  line-height: 1.1;
+  filter: brightness(1.06);
 }
 
 /* === 칩 (배지) === */
@@ -242,8 +304,8 @@ body {
 }
 .bm-chip-accent {
   background: var(--accent-soft);
-  color: var(--accent);
-  border: 1px solid var(--accent);
+  color: var(--accent-deep);
+  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
 }
 .bm-chip-hot {
   background: var(--hot-soft);
