@@ -28,7 +28,9 @@
 
 자판기처럼 자동화 에이전트를 골라서 활성화. 동작 중/꺼짐/곧 추가 상태가 한눈에.
 
-![카탈로그 메인](docs/images/catalog.png)
+![카탈로그 메인 (라이트 UI)](docs/images/catalog-light.png)
+
+> _이전 다크 톤 캡처: [docs/images/catalog.png](docs/images/catalog.png)_
 
 **`/agent` — 메일 답장 에이전트 상세 상태**
 
