@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/static/pretendard.css");
+@import url("https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Gaegu:wght@400;700&display=swap");
 
 /* =========================================================
    HI AI LAB — 우리만의 톤 (배민/노션/Linear 와 겹치지 않게)
@@ -97,6 +98,7 @@ input:-webkit-autofill:focus {
 
 body {
   font-family:
+    "Gowun Dodum",
     "Pretendard Variable",
     Pretendard,
     -apple-system,
@@ -107,10 +109,16 @@ body {
     Roboto,
     sans-serif;
   font-feature-settings: "tnum" 1;
-  letter-spacing: -0.012em;
-  font-weight: 500;
+  letter-spacing: -0.005em;
+  font-weight: 400;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+/* 영웅 카피 — 손글씨 느낌 (가독성 위해 큰 사이즈만) */
+.bm-hand {
+  font-family: "Gaegu", "Gowun Dodum", system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.005em;
 }
 
 /* === 카드 === */

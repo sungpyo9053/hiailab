@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { CATEGORY_LABEL, type AgentMeta } from "@/lib/agents";
+import Landing from "./Landing";
 
 type ActivationEntry = { enabled: boolean; activatedAt: string };
 type AgentItem = AgentMeta & {
@@ -93,33 +94,9 @@ export default function CatalogClient() {
     return <div className="bm-card p-8 text-center text-sm text-[var(--foreground-muted)]">로딩 중…</div>;
   }
 
-  // saas + 미로그인 → 회원가입/로그인 히어로
+  // saas + 미로그인 → 스크롤 랜딩
   if (me.mode === "saas" && !me.user) {
-    return (
-      <section className="bm-card-hero p-12 text-center">
-        <div className="text-6xl mb-4">✉️</div>
-        <h2 className="bm-hero text-[34px] text-[var(--foreground)]">
-          메일 자동화, <span className="text-[var(--hot)]">자판기처럼</span> 골라 쓰세요
-        </h2>
-        <p className="mt-4 text-[15px] leading-relaxed text-[var(--foreground-soft)]">
-          가입 후 본인 Gmail을 연동하면 자동 답장 초안이 임시보관함에 자동으로 만들어져요.
-          <br />
-          <b className="text-[var(--foreground)]">자동 발송은 절대 일어나지 않아요.</b> 본인이 검토 후 보내기만.
-        </p>
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-          <Link href="/signup" className="bm-btn-hot">
-            ✨ 무료로 시작하기
-          </Link>
-          <Link href="/login" className="bm-btn-secondary">
-            로그인
-          </Link>
-        </div>
-        <p className="mt-4 text-xs text-[var(--foreground-muted)]">
-          이메일/비밀번호로 가입 → Gmail 연동은 가입 후 한 번 클릭.
-        </p>
-        {msg && <p className="mt-4 text-xs text-[var(--warning)]">{msg}</p>}
-      </section>
-    );
+    return <Landing msg={msg} />;
   }
 
   if (!data) {
