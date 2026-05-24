@@ -15,7 +15,12 @@ export type ConfigKey =
   | "SMTP_USER"
   | "SMTP_PASS"
   | "DEFAULT_TO_EMAIL"
-  | "KAKAO_ACCESS_TOKEN";
+  | "KAKAO_ACCESS_TOKEN"
+  // Gmail 자동화 (OAuth)
+  | "GOOGLE_OAUTH_CLIENT_ID"
+  | "GOOGLE_OAUTH_CLIENT_SECRET"
+  | "GMAIL_REFRESH_TOKEN"
+  | "GMAIL_EMAIL"; // 연결된 이메일 주소 (표시용)
 
 export const ALL_CONFIG_KEYS: ConfigKey[] = [
   "OPENAI_API_KEY",
@@ -25,6 +30,10 @@ export const ALL_CONFIG_KEYS: ConfigKey[] = [
   "SMTP_PASS",
   "DEFAULT_TO_EMAIL",
   "KAKAO_ACCESS_TOKEN",
+  "GOOGLE_OAUTH_CLIENT_ID",
+  "GOOGLE_OAUTH_CLIENT_SECRET",
+  "GMAIL_REFRESH_TOKEN",
+  "GMAIL_EMAIL",
 ];
 
 // 파일 구조:
