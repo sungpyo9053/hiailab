@@ -1,6 +1,5 @@
 "use client";
 
-// 정책 문구체 — 해명체 X. 정적, 신뢰감.
 const POLICIES = [
   {
     label: "데이터 처리 위치",
@@ -8,19 +7,19 @@ const POLICIES = [
     detail: "외부 서버로 전송되지 않으며, 셀프호스팅 시 본인 인프라에 보관됩니다.",
   },
   {
-    label: "발송 정책",
-    body: "자동 생성된 답장은 즉시 발송되지 않으며, Gmail 임시보관함에서 사용자가 직접 확인 후 발송합니다.",
-    detail: "Gmail Drafts API만 사용하며, messages.send 권한은 요청하지 않습니다.",
+    label: "권한 정책",
+    body: "각 에이전트는 필요한 권한만 연결하며, 실행 결과는 사용자가 확인한 뒤 적용할 수 있습니다.",
+    detail: "최소 권한 원칙. 사용 중인 OAuth scope는 대시보드에서 투명하게 공개됩니다.",
   },
   {
-    label: "권한 범위",
-    body: "최소 권한 원칙을 따릅니다. 각 에이전트는 필요한 OAuth scope만 요청합니다.",
-    detail: "Gmail Agent: gmail.readonly · gmail.compose / Calendar Agent: calendar.events",
+    label: "발송 정책",
+    body: "자동 생성된 결과는 즉시 적용되지 않습니다. 메일은 임시보관함, 일정은 tentative, 문서는 draft 형태로 저장됩니다.",
+    detail: "사용자가 명시적으로 [적용]하기 전에는 외부에 어떤 변경도 일어나지 않습니다.",
   },
   {
     label: "저장 정책",
-    body: "메일 본문은 분류·생성 직후 즉시 폐기됩니다. 메타데이터(메일 ID, 분류 결과)만 사용자 디렉토리에 기록됩니다.",
-    detail: "AES-256-GCM 암호화 적용. 키는 사용자가 지정한 APP_ENCRYPTION_KEY로 파생됩니다.",
+    body: "원본 데이터(메일 본문, 문서 내용)는 처리 직후 즉시 폐기됩니다. 메타데이터(ID, 카테고리, 실행 시각)만 사용자 환경에 기록됩니다.",
+    detail: "API 키는 AES-256-GCM으로 암호화됩니다. 키 파생은 APP_ENCRYPTION_KEY 기반.",
   },
 ];
 
@@ -52,7 +51,6 @@ export default function SecuritySection() {
           ))}
         </div>
 
-        {/* 보안 stripe */}
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--background-elev)] px-6 py-4 text-[12px]">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[var(--foreground-soft)]">
             <span className="flex items-center gap-1.5">
@@ -61,7 +59,7 @@ export default function SecuritySection() {
             </span>
             <span className="flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-[var(--success)]" />
-              No auto-send
+              Manual apply
             </span>
             <span className="flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-[var(--success)]" />

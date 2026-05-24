@@ -3,54 +3,37 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const USE_CASES = [
+type UseCase = {
+  key: string;
+  title: string;
+  sub: string;
+  agents: string[];
+};
+
+const USE_CASES: UseCase[] = [
   {
     key: "personal",
-    emoji: "👤",
     title: "개인 생산성",
-    sub: "메일에 끌려다니지 않기",
-    flow: [
-      { e: "📥", t: "받은편지함 polling" },
-      { e: "🏷️", t: "needs_reply 분류" },
-      { e: "✍️", t: "답장 초안 생성" },
-      { e: "✋", t: "본인 검토 후 발송" },
-    ],
+    sub: "흩어진 inbox 통합",
+    agents: ["메일 요약", "중요 메일 분류", "일정 감지", "Slack 알림 정리", "일간 요약"],
   },
   {
     key: "dev",
-    emoji: "👨‍💻",
     title: "개발자",
-    sub: "GitHub 알림 자동 정리",
-    flow: [
-      { e: "🔔", t: "GitHub notification 수신" },
-      { e: "🎯", t: "PR review / issue 분류" },
-      { e: "📌", t: "중요한 것만 Slack DM" },
-      { e: "📊", t: "주간 활동 리포트" },
-    ],
+    sub: "알림과 문서 자동 정리",
+    agents: ["GitHub 알림 정리", "장애 알림 요약", "PDF/문서 요약", "주간 활동 리포트", "실행 로그 리포트"],
   },
   {
     key: "smb",
-    emoji: "🏪",
     title: "소상공인",
-    sub: "주문/문의 자동 응대",
-    flow: [
-      { e: "📧", t: "고객 문의 메일 수신" },
-      { e: "🤖", t: "FAQ 자동 매칭" },
-      { e: "📝", t: "맞춤 답장 초안" },
-      { e: "✅", t: "사장님 한 번 보고 전송" },
-    ],
+    sub: "고객 응대와 데이터 정리",
+    agents: ["메일 분류", "답장 초안 생성", "CSV/엑셀 정리", "중복 제거", "주간 매출 리포트"],
   },
   {
     key: "team",
-    emoji: "🧑‍🤝‍🧑",
     title: "팀 운영자",
-    sub: "팀 메일 라우팅",
-    flow: [
-      { e: "📬", t: "팀 inbox 모니터링" },
-      { e: "🏷️", t: "주제별 자동 분류" },
-      { e: "👥", t: "담당자에게 자동 할당" },
-      { e: "⏱️", t: "응답 SLA 추적" },
-    ],
+    sub: "팀 inbox와 리포트 자동화",
+    agents: ["팀 메일 라우팅", "회의 리마인드", "캘린더 정리", "자동 보고서 생성", "Slack 다이제스트"],
   },
 ];
 
@@ -59,16 +42,19 @@ export default function UseCaseSection() {
   const activeCase = USE_CASES.find((c) => c.key === active)!;
 
   return (
-    <section id="use-cases" className="relative bg-[var(--background-soft)] py-32">
+    <section id="use-cases" className="relative py-32">
       <div className="mx-auto max-w-6xl px-5">
         <div className="text-center">
-          <span className="bm-chip-warm">Use Cases</span>
+          <span className="bm-chip-hot">Use Cases</span>
           <h2 className="bm-hand mt-4 text-[36px] text-[var(--foreground)] sm:text-[52px]">
-            누가 이걸 쓰나요?
+            누가, 어떻게 조합하나요?
           </h2>
+          <p className="mx-auto mt-5 max-w-xl text-[14px] leading-relaxed text-[var(--foreground-soft)] sm:text-[16px]">
+            카테고리별 에이전트를 자유롭게 조합해서 본인 워크플로우를 만드세요.
+          </p>
         </div>
 
-        <div className="mt-14 grid gap-4 sm:grid-cols-4">
+        <div className="mt-14 grid gap-3 sm:grid-cols-4">
           {USE_CASES.map((c) => {
             const isActive = c.key === active;
             return (
@@ -82,8 +68,12 @@ export default function UseCaseSection() {
                     : "border-[var(--border)] bg-[var(--background-elev)] hover:border-[var(--border-strong)]")
                 }
               >
-                <div className="text-[28px]">{c.emoji}</div>
-                <div className={"mt-3 text-[15px] font-bold " + (isActive ? "text-[#a5b4fc]" : "text-[var(--foreground)]")}>
+                <div
+                  className={
+                    "text-[15px] font-bold " +
+                    (isActive ? "text-[#a5b4fc]" : "text-[var(--foreground)]")
+                  }
+                >
                   {c.title}
                 </div>
                 <div className="mt-1 text-[12px] text-[var(--foreground-muted)]">{c.sub}</div>
@@ -92,8 +82,7 @@ export default function UseCaseSection() {
           })}
         </div>
 
-        {/* 선택된 use case 플로우 */}
-        <div className="mt-10">
+        <div className="mt-8">
           <AnimatePresence mode="wait">
             <motion.div
               key={active}
@@ -103,28 +92,27 @@ export default function UseCaseSection() {
               transition={{ duration: 0.3 }}
               className="bm-card p-8"
             >
-              <div className="mb-6 flex items-center gap-3">
-                <span className="text-[28px]">{activeCase.emoji}</span>
-                <div>
-                  <div className="text-[16px] font-bold text-[var(--foreground)]">{activeCase.title}</div>
-                  <div className="text-[12px] text-[var(--foreground-soft)]">자동화 플로우 예시</div>
+              <div className="mb-6">
+                <div className="text-[10px] uppercase tracking-wider text-[var(--accent)]">
+                  추천 조합
+                </div>
+                <div className="mt-1 text-[20px] font-bold text-[var(--foreground)]">
+                  {activeCase.title} · {activeCase.sub}
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-                {activeCase.flow.map((step, i) => (
-                  <div key={i} className="relative">
-                    <div className="rounded-lg border border-[var(--border)] bg-[var(--background-soft)] p-4 text-center">
-                      <div className="text-[26px]">{step.e}</div>
-                      <div className="mt-2 text-[11px] font-semibold text-[var(--foreground)]">{step.t}</div>
-                      <div className="mt-1 mono text-[9px] text-[var(--foreground-muted)]">Step {i + 1}</div>
-                    </div>
-                    {i < activeCase.flow.length - 1 && (
-                      <div className="absolute -right-2 top-1/2 hidden -translate-y-1/2 sm:block">
-                        <span className="text-[18px] text-[var(--foreground-muted)]">→</span>
-                      </div>
-                    )}
+              <div className="flex flex-wrap gap-2">
+                {activeCase.agents.map((agent, i) => (
+                  <div
+                    key={i}
+                    className="flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--background-soft)] px-3 py-2"
+                  >
+                    <span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]" />
+                    <span className="text-[12px] text-[var(--foreground)]">{agent}</span>
                   </div>
                 ))}
+              </div>
+              <div className="mt-6 rounded-lg border border-[var(--border-soft)] bg-[var(--background-soft)] p-4 mono text-[11px] text-[var(--foreground-soft)]">
+                {activeCase.agents.length} agents activated · running in your environment
               </div>
             </motion.div>
           </AnimatePresence>

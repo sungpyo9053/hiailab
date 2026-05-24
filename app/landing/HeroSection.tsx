@@ -6,7 +6,6 @@ import DashboardMock from "./DashboardMock";
 export default function HeroSection({ msg }: { msg?: string | null }) {
   return (
     <section className="relative overflow-hidden pt-20 pb-32 sm:pt-28">
-      {/* Aurora 배경 — 블루+퍼플 단일 톤 */}
       <div className="bm-aurora" style={{ background: "#3b82f6", top: -200, left: "10%", width: 600, height: 600 }} />
       <div className="bm-aurora" style={{ background: "#8b5cf6", top: 100, right: "5%", width: 500, height: 500 }} />
       <div className="absolute inset-0 bm-dotgrid opacity-50" />
@@ -20,22 +19,22 @@ export default function HeroSection({ msg }: { msg?: string | null }) {
         >
           <span className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--background-elev)] px-3 py-1.5 text-[12px] font-medium text-[var(--foreground-soft)]">
             <span className="bm-chip-accent rounded-full px-2 py-0.5 text-[10px]">v0.1</span>
-            오픈소스 공개 · MIT License
+            6 categories · 18 agents · MIT License
           </span>
 
           <h1 className="bm-hand mt-7 text-[42px] leading-[1.05] sm:text-[72px]">
-            개인 업무 자동화를 위한<br />
-            <span className="bm-grad-text">AI Agent Hub</span>
+            필요한 <span className="bm-grad-text">AI 에이전트</span>를<br />
+            골라 켜세요
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-[16px] leading-relaxed text-[var(--foreground-soft)] sm:text-[18px]">
-            메일, 일정, 문서, 알림을 연결하고 반복 업무를 자동으로
-            분류·요약·초안 작성까지 처리하세요.
+            메일, 일정, 문서, 알림, 리포트 자동화까지.
+            반복 업무를 에이전트 단위로 선택하고 실행하는 개인 자동화 허브입니다.
           </p>
 
           <div className="mt-9 flex flex-wrap items-center justify-center gap-3">
             <a href="#agents" className="bm-btn-hot" style={{ padding: "14px 30px", fontSize: 15 }}>
-              데모 보기
+              에이전트 둘러보기
             </a>
             <a
               href="https://github.com/sungpyo9053/hiailab"
@@ -53,7 +52,6 @@ export default function HeroSection({ msg }: { msg?: string | null }) {
           {msg && <p className="mt-4 text-[12px] text-[var(--warning)]">{msg}</p>}
         </motion.div>
 
-        {/* Mock UI */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
