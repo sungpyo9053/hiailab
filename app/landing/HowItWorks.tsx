@@ -5,32 +5,32 @@ import { motion } from "framer-motion";
 const STEPS = [
   {
     n: "01",
-    title: "에이전트 선택",
-    desc: "Catalog에서 필요한 에이전트를 카테고리별로 골라 활성화합니다.",
-    snippet: "메일 요약 · PDF 요약 · Slack 정리",
+    title: "작별하고 싶은 일을 고른다",
+    desc: "메일 스트레스, 일정 놓침, 문서 피로 — 매일 반복되는 것 중 하나부터 시작하세요.",
+    snippet: "Bye declaration",
   },
   {
     n: "02",
-    title: "필요한 API 키 연결",
-    desc: "Gmail, Calendar, Slack 등 필요한 서비스만 OAuth로 연결합니다. 최소 권한 원칙.",
-    snippet: "oauth.connect('gmail')",
+    title: "필요한 에이전트를 선택한다",
+    desc: "선택한 'Bye'에 맞는 에이전트를 Catalog에서 활성화합니다.",
+    snippet: "agent.activate('mail-summary')",
   },
   {
     n: "03",
-    title: "실행 조건 설정",
-    desc: "주기, 트리거, 조건을 폼으로 정합니다. 코드 작성은 필요 없습니다.",
-    snippet: "every 5min · when needs_reply",
+    title: "API 키와 실행 조건을 연결한다",
+    desc: "필요한 서비스만 OAuth로 연결하고, 주기·트리거를 폼으로 정합니다. 코드 작성 없음.",
+    snippet: "oauth + schedule + trigger",
   },
   {
     n: "04",
-    title: "자동 실행",
+    title: "에이전트가 반복 업무를 처리한다",
     desc: "설정된 조건에 따라 백그라운드에서 자동으로 동작합니다.",
-    snippet: "agent.run() → drafts.create()",
+    snippet: "agent.run() · idempotent",
   },
   {
     n: "05",
-    title: "결과 확인",
-    desc: "실행 결과를 대시보드에서 확인하고, 적용 여부는 사용자가 직접 결정합니다.",
+    title: "실행 결과를 확인하고 적용한다",
+    desc: "결과는 대시보드에 쌓이고, 외부에 적용할지는 사용자가 직접 결정합니다.",
     snippet: "review → apply / discard",
   },
 ];
@@ -42,7 +42,8 @@ export default function HowItWorks() {
         <div className="text-center">
           <span className="bm-chip">How it works</span>
           <h2 className="bm-hand mt-4 text-[36px] text-[var(--foreground)] sm:text-[52px]">
-            <span className="bm-grad-text">5단계</span>로 자동화 시작
+            <span className="bm-grad-text">5단계</span>로<br className="sm:hidden" />
+            반복을 떠나보내세요
           </h2>
         </div>
 
@@ -66,9 +67,6 @@ export default function HowItWorks() {
                   {step.snippet}
                 </div>
               </div>
-              {i < STEPS.length - 1 && (
-                <div className="hidden text-[20px] text-[var(--foreground-muted)] sm:block">↓</div>
-              )}
             </motion.div>
           ))}
         </div>

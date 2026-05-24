@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "HI AI LAB — 필요한 AI 에이전트를 골라 켜는 자동화 허브",
+  title: "HIAI — Hi AI. Bye 반복업무.",
   description:
-    "메일, 일정, 문서, 알림, 리포트, 데이터 정리까지. 반복 업무를 에이전트 단위로 선택하고 실행하는 개인 자동화 허브. 모든 처리는 사용자의 실행 환경에서.",
+    "필요한 AI 에이전트를 골라 켜고, 매일 반복되는 일을 하나씩 떠나보내세요. 메일, 일정, 문서, 알림, 리포트까지 — 내 삶에서 없애고 싶은 일을 에이전트로 자동화합니다.",
 };
 
 export default function RootLayout({

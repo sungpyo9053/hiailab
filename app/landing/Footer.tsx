@@ -12,11 +12,14 @@ export default function Footer() {
               <span className="flex h-7 w-7 items-center justify-center rounded-lg" style={{ background: "var(--gradient-hero)" }}>
                 <span className="text-white text-[12px] font-black">H</span>
               </span>
-              <span>HI AI LAB</span>
+              <span>HI AI <span className="text-[var(--foreground-muted)] text-[12px] font-medium ml-1">Agent Hub</span></span>
             </div>
-            <p className="mt-3 max-w-xs text-[12px] leading-relaxed text-[var(--foreground-muted)]">
-              메일 자동화는 코드가 아니라 규칙으로.
-              <br />본인 계정 안에서 동작하는 오픈소스 AI 에이전트.
+            <p className="mt-3 max-w-xs text-[13px] font-semibold leading-relaxed text-[var(--foreground)]">
+              Hi AI. Bye 반복업무.
+            </p>
+            <p className="mt-2 max-w-xs text-[12px] leading-relaxed text-[var(--foreground-muted)]">
+              필요한 AI 에이전트를 골라 켜고,
+              매일 반복되는 일을 하나씩 떠나보내세요.
             </p>
             <div className="mt-4 flex items-center gap-2">
               <a
