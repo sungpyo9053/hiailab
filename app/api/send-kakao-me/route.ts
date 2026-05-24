@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
   }
 
   // === REAL 모드 ===
-  const title = body.title?.trim() || "[오토벤딩] AI 결과 도착";
+  const title = body.title?.trim() || "[HiaiLab] AI 결과 도착";
   const linkUrl =
     body.linkUrl?.trim() ||
     process.env.NEXT_PUBLIC_APP_URL ||

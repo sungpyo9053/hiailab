@@ -3,7 +3,7 @@
 // 하단에 한 줄 안내만 덧붙인다.
 
 const MOCK_FOOTER =
-  "\n\n— ⚠ 이것은 MOCK 결과입니다. 실제 AI 결과를 보려면 /setup 또는 .env.local에서 OPENAI_API_KEY를 설정하세요.";
+  "\n\n— ⚠ HiaiLab가 키 없이 돌고 있어 MOCK 샘플을 보여드린 거예요. 실제 AI 답장을 보려면 /setup 또는 .env.local에서 OPENAI_API_KEY를 설정하세요.";
 
 const MOCKS: Record<string, string> = {
   "email-reply": `■ 상황 요약

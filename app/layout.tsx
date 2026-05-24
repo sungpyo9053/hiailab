@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "오토벤딩",
-  description: "필요한 AI 자동화를 자판기처럼 바로 뽑아 쓰는 서비스",
+  title: "HiaiLab",
+  description:
+    "받은 메일에 정중한 답장을 만들어주는 셀프호스팅 AI 에이전트",
 };
 
 export default function RootLayout({

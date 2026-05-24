@@ -1,6 +1,6 @@
 # 🏠 내 컴퓨터에서 실행하기 (로컬)
 
-오토벤딩을 본인 컴퓨터에서 돌리는 가장 간단한 방법입니다.
+HiaiLab을 본인 컴퓨터에서 돌리는 가장 간단한 방법입니다.
 
 > 처음이라면 → [QUICKSTART.md](../QUICKSTART.md) 먼저 보세요.
 
@@ -64,7 +64,7 @@ docker compose up -d --build
 - 로그 보기: `docker compose logs -f`
 - 중지: `docker compose down`
 
-`/setup` 에서 저장한 값은 호스트의 **`./.autovending/` 폴더**에 영구 보관됩니다.
+`/setup` 에서 저장한 값은 호스트의 **`./.hiailab/` 폴더**에 영구 보관됩니다.
 (컨테이너를 지워도 설정은 남습니다.)
 
 ---

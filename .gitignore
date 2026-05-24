@@ -22,8 +22,8 @@ yarn-error.log*
 .env.local
 .env*.local
 
-# 오토벤딩이 /setup에서 암호화 저장하는 폴더 — 절대 커밋 금지
-.autovending/
+# HiaiLab가 /setup에서 암호화 저장하는 폴더 — 절대 커밋 금지
+.hiailab/
 
 # Claude Code 로컬 권한 설정 (사용자별 — 공개 금지)
 .claude/

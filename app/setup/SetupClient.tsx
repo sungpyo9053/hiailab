@@ -364,7 +364,7 @@ export default function SetupClient() {
       )}
 
       <p className="mt-8 text-xs text-white/40">
-        ※ 입력한 값은 외부로 전송되지 않으며, 이 서버의 <code>.autovending/</code>{" "}
+        ※ 입력한 값은 외부로 전송되지 않으며, 이 서버의 <code>.hiailab/</code>{" "}
         폴더(권한 600)에 AES-256-GCM 암호화되어 저장됩니다. 이 폴더는 Git에
         커밋되지 않습니다.
       </p>

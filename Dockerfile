@@ -1,7 +1,7 @@
 # =========================================================
-# 오토벤딩 Dockerfile — Next.js standalone 출력 사용
-# 빌드:        docker build -t autovending .
-# 실행:        docker run --rm -p 3000:3000 --env-file .env.local autovending
+# HiaiLab Dockerfile — Next.js standalone 출력 사용
+# 빌드:        docker build -t hiailab .
+# 실행:        docker run --rm -p 3000:3000 --env-file .env.local hiailab
 # compose 권장: docker compose up -d
 # =========================================================
 
@@ -33,11 +33,10 @@ RUN addgroup -S nextjs && adduser -S nextjs -G nextjs
 # Next.js standalone 출력만 복사 (image 크기 최적화)
 COPY --from=builder --chown=nextjs:nextjs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nextjs /app/.next/static ./.next/static
-# public 폴더는 현재 비어 있어도 무방하지만, 존재하면 복사
 COPY --from=builder --chown=nextjs:nextjs /app/public ./public
 
 # /setup 에서 저장하는 폴더 (런타임에 mkdir 됨, 권한 미리 확보)
-RUN mkdir -p /app/.autovending && chown -R nextjs:nextjs /app/.autovending
+RUN mkdir -p /app/.hiailab && chown -R nextjs:nextjs /app/.hiailab
 
 USER nextjs
 EXPOSE 3000

@@ -3,9 +3,9 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { decryptString, encryptString, hasEncryptionKey } from "./crypto";
 
-// 저장 위치: 프로젝트 루트 .autovending/config.enc.json
+// 저장 위치: 프로젝트 루트 .hiailab/config.enc.json
 // .gitignore 에 등록되어 있어야 한다.
-const STORE_DIR = path.join(process.cwd(), ".autovending");
+const STORE_DIR = path.join(process.cwd(), ".hiailab");
 const STORE_FILE = path.join(STORE_DIR, "config.enc.json");
 
 export type ConfigKey =

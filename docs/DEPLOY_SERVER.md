@@ -1,6 +1,6 @@
 # 🖥️ 개인 서버에 올리기 (Docker)
 
-오토벤딩을 본인의 VPS / 라즈베리파이 / 회사 안 서버 등에 올려서, 인터넷 어디서나 본인이 사용하는 방법입니다.
+HiaiLab을 본인의 VPS / 라즈베리파이 / 회사 안 서버 등에 올려서, 인터넷 어디서나 본인이 사용하는 방법입니다.
 
 > 비전공자도 따라할 수 있도록 단계별로 풀어 적었습니다. 막히면 [FAQ](./FAQ.md) 참고.
 
@@ -52,7 +52,7 @@ docker compose version
 
 ---
 
-## 3. 오토벤딩 코드 받기
+## 3. HiaiLab 코드 받기
 
 서버 안에서:
 
@@ -61,8 +61,8 @@ docker compose version
 sudo apt update && sudo apt install -y git
 
 # 코드 받기
-git clone https://github.com/sungpyo9053/autovending.git
-cd autovending
+git clone https://github.com/sungpyo9053/hiailab.git
+cd hiailab
 ```
 
 ---
@@ -138,7 +138,7 @@ QUICKSTART 의 6번 단계와 동일합니다.
 
 ## (선택) 8. 도메인 + HTTPS 붙이기
 
-오토벤딩을 본인의 도메인 (예: `vending.mysite.com`) 으로 띄우고 싶다면 nginx + Caddy + Traefik 같은 리버스 프록시를 앞단에 두는 것이 일반적입니다.
+HiaiLab을 본인의 도메인 (예: `vending.mysite.com`) 으로 띄우고 싶다면 nginx + Caddy + Traefik 같은 리버스 프록시를 앞단에 두는 것이 일반적입니다.
 
 **가장 쉬운 방법은 Caddy** 입니다 (자동 HTTPS).
 
@@ -179,7 +179,7 @@ sudo systemctl restart caddy
 서버 안에서:
 
 ```bash
-cd ~/autovending
+cd ~/hiailab
 git pull
 docker compose up -d --build
 ```
@@ -189,7 +189,7 @@ docker compose up -d --build
 ## 안전 점검 체크리스트
 
 - [ ] `.env.local` 이 GitHub 에 올라가지 않았는지 확인 (있으면 즉시 키 폐기/재발급)
-- [ ] `.autovending/` 폴더가 GitHub 에 올라가지 않았는지 확인
+- [ ] `.hiailab/` 폴더가 GitHub 에 올라가지 않았는지 확인
 - [ ] 서버 SSH 비밀번호 대신 SSH 키 인증 사용 권장
 - [ ] 본인만 사용한다면 인증 없이 띄워도 되지만, 다른 사람과 공유한다면 Caddy basic auth 등 추가 권장
 - [ ] OpenAI 사용량 알림(monthly cap)을 OpenAI 대시보드에서 설정

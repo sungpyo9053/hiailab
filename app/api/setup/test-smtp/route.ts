@@ -50,11 +50,11 @@ export async function POST(req: NextRequest) {
 
   try {
     await transporter.sendMail({
-      from: `"오토벤딩" <${smtp.user}>`,
+      from: `"HiaiLab" <${smtp.user}>`,
       to,
-      subject: "[오토벤딩] SMTP 연결 테스트",
+      subject: "[HiaiLab] SMTP 연결 테스트",
       text:
-        "이 메일이 보이면 오토벤딩의 SMTP 설정이 정상 동작합니다.\n\n" +
+        "이 메일이 보이면 HiaiLab의 SMTP 설정이 정상 동작합니다.\n\n" +
         "이 메일은 /setup 페이지의 '연결 테스트' 버튼으로 발송되었습니다.",
     });
     return NextResponse.json({

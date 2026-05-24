@@ -114,7 +114,7 @@ export default function GeneratorClient({
       result.text,
       "-------------------",
       "",
-      "오토벤딩 로컬 POC에서 발송됨",
+      "HiaiLab에서 발송됨",
     ].join("\n");
   }
 
@@ -143,7 +143,7 @@ export default function GeneratorClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           to: emailTo.trim() || undefined,
-          subject: `[오토벤딩] ${generatorName} 결과`,
+          subject: `[HiaiLab] ${generatorName} 결과`,
           content: buildEmailBody(),
         }),
       });
@@ -174,7 +174,7 @@ export default function GeneratorClient({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: "[오토벤딩] AI 결과 도착",
+          title: "[HiaiLab] AI 결과 도착",
           content: buildKakaoBody(),
         }),
       });
@@ -225,11 +225,8 @@ export default function GeneratorClient({
             disabled={!input.trim() || generating}
             className="rounded-xl bg-[var(--accent)] px-5 py-2.5 font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"
           >
-            {generating ? "뽑는 중…" : "₩900으로 뽑기"}
+            {generating ? "AI가 작성 중…" : "✉️ AI에게 부탁하기"}
           </button>
-          <span className="text-xs text-white/40">
-            ※ POC라 실제 결제는 일어나지 않습니다.
-          </span>
         </div>
         {genError && <p className="mt-3 text-sm text-red-400">⚠ {genError}</p>}
       </section>

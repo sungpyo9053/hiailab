@@ -8,17 +8,17 @@ export default function SetupPage() {
     <main className="mx-auto max-w-3xl px-5 py-10">
       <nav className="mb-6 text-sm">
         <Link href="/" className="text-white/50 hover:text-white">
-          ← 메뉴로
+          ← HiaiLab로
         </Link>
       </nav>
 
       <header className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight">
-          오토벤딩 설정 마법사 🛠️
+          HiaiLab 설정 마법사 🛠️
         </h1>
         <p className="mt-2 text-sm text-white/60">
           이 설정은 <b>이 서버에서만</b> 사용됩니다. 입력한 값은 외부 서비스로
-          전송되지 않으며, 암호화되어 이 컴퓨터의 <code>.autovending/config.enc.json</code>{" "}
+          전송되지 않으며, 암호화되어 이 컴퓨터의 <code>.hiailab/config.enc.json</code>{" "}
           파일에만 저장됩니다.
         </p>
         <p className="mt-1 text-xs text-white/40">

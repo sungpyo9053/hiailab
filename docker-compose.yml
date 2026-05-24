@@ -1,8 +1,8 @@
 services:
-  autovending:
+  hiailab:
     build: .
-    image: autovending:latest
-    container_name: autovending
+    image: hiailab:latest
+    container_name: hiailab
     ports:
       - "3000:3000"
     # .env.local 의 모든 값이 컨테이너 환경변수로 주입됩니다.
@@ -11,5 +11,5 @@ services:
       - .env.local
     # /setup 에서 저장한 암호화 설정 파일을 호스트에 영구 보관
     volumes:
-      - ./.autovending:/app/.autovending
+      - ./.hiailab:/app/.hiailab
     restart: unless-stopped
