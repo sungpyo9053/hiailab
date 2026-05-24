@@ -32,7 +32,7 @@ export default function Landing({ msg }: { msg?: string | null }) {
       </header>
 
       {/* === Hero === */}
-      <section className="relative overflow-hidden border-b border-[var(--border)]" style={{ background: "linear-gradient(180deg, var(--accent-soft) 0%, #ffffff 100%)" }}>
+      <section className="relative overflow-hidden border-b border-[var(--border)]" style={{ background: "var(--gradient-soft)" }}>
         <div className="mx-auto max-w-6xl px-5 py-24 sm:py-32">
           <div className="grid items-center gap-12 sm:grid-cols-2">
             <motion.div
@@ -45,7 +45,12 @@ export default function Landing({ msg }: { msg?: string | null }) {
               </span>
               <h1 className="bm-hand mt-5 text-[44px] leading-[1.1] text-[var(--foreground)] sm:text-[56px]">
                 메일 답장,<br />
-                <span className="text-[var(--accent)]">AI가 알아서</span> 만들어 둡니다
+                <span style={{
+                  background: "var(--gradient-hero)",
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                }}>AI가 알아서</span> 만들어 둡니다
               </h1>
               <p className="mt-5 text-[16px] leading-relaxed text-[var(--foreground-soft)] sm:text-[17px]">
                 Gmail을 연결하면 받은편지함을 자동 분석해서{" "}
@@ -222,7 +227,7 @@ export default function Landing({ msg }: { msg?: string | null }) {
       </section>
 
       {/* === 마지막 CTA === */}
-      <section className="bg-[var(--accent)] py-20">
+      <section className="py-20" style={{ background: "var(--gradient-hero)" }}>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -237,7 +242,8 @@ export default function Landing({ msg }: { msg?: string | null }) {
           <p className="mt-5 text-[15px] text-white/85">가입 2분 · Gmail 연결 1분 · 끝.</p>
           <Link
             href="/signup"
-            className="mt-8 inline-flex items-center gap-2 rounded-lg bg-white px-8 py-4 text-base font-bold text-[var(--accent-deep)] shadow-lg transition hover:bg-[var(--background-soft)]"
+            className="mt-8 inline-flex items-center gap-2 rounded-lg bg-white px-8 py-4 text-base font-bold shadow-lg transition hover:bg-[var(--background-soft)]"
+            style={{ color: "var(--accent-deep)" }}
           >
             무료로 시작하기 →
           </Link>
