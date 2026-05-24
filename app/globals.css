@@ -1,9 +1,47 @@
 @import "tailwindcss";
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/static/pretendard.css");
+
+/* =========================================================
+   HI AI LAB — 우리만의 색 + Pretendard
+   Primary: 딥 인디고 (#4F46E5) — 신뢰
+   Accent : 머스타드 골드 (#F5B544) — HI! 친근함
+   배경    : #FBFBFD (살짝 차가운 흰)
+   ========================================================= */
 
 :root {
-  --background: #0b0d10;
-  --foreground: #f5f6f8;
-  --accent: #ffd84d;
+  --background: #fbfbfd;
+  --background-soft: #f3f3f7;
+  --background-card: #ffffff;
+
+  --foreground: #1a1a28;
+  --foreground-soft: #5a5a6e;
+  --foreground-muted: #9c9caf;
+
+  /* Primary — 딥 인디고 */
+  --accent: #4f46e5;
+  --accent-strong: #4338ca;
+  --accent-deep: #312e81;
+  --accent-soft: #eef2ff;
+  --accent-foreground: #1e1b4b;
+
+  /* Secondary — 머스타드 골드 (HI! 인사 컬러) */
+  --warm: #f5b544;
+  --warm-strong: #d99a2b;
+  --warm-soft: #fff5e0;
+  --warm-foreground: #78350f;
+
+  --success: #10b981;
+  --success-soft: #d1fae5;
+  --warning: #f59e0b;
+  --warning-soft: #fef3c7;
+  --danger: #ef4444;
+  --danger-soft: #fee2e2;
+
+  --border: #e8e8ee;
+  --border-soft: #f1f1f5;
+  --shadow-sm: 0 1px 2px rgba(20, 20, 50, 0.04);
+  --shadow: 0 6px 18px rgba(20, 20, 50, 0.07);
+  --shadow-lg: 0 18px 40px rgba(20, 20, 50, 0.1);
 }
 
 html,
@@ -14,6 +52,139 @@ body {
 }
 
 body {
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+  font-family:
+    "Pretendard Variable",
+    Pretendard,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Apple SD Gothic Neo",
+    "Noto Sans KR",
+    "Segoe UI",
+    Roboto,
+    sans-serif;
+  font-feature-settings: "tnum" 1, "ss06" 1;
+  letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === 카드 === */
+.bm-card {
+  background: var(--background-card);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  box-shadow: var(--shadow-sm);
+}
+.bm-card-soft {
+  background: var(--background-soft);
+  border: 1px solid var(--border-soft);
+  border-radius: 20px;
+}
+.bm-card-hero {
+  background: linear-gradient(160deg, var(--accent-soft) 0%, #ffffff 70%);
+  border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent);
+  border-radius: 32px;
+  box-shadow: var(--shadow);
+}
+
+/* === 버튼 === */
+.bm-btn-primary {
+  background: var(--accent);
+  color: #ffffff;
+  border-radius: 14px;
+  padding: 11px 20px;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  transition: filter 0.15s, transform 0.05s, box-shadow 0.15s;
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.bm-btn-primary:hover {
+  filter: brightness(1.05);
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+.bm-btn-primary:active {
+  transform: translateY(1px);
+}
+.bm-btn-primary:disabled {
+  background: var(--border);
+  color: var(--foreground-muted);
+  cursor: not-allowed;
+  box-shadow: none;
+  filter: none;
+}
+
+.bm-btn-secondary {
+  background: #ffffff;
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 10px 18px;
+  font-weight: 600;
+  font-size: 13px;
+  transition: background 0.15s, border-color 0.15s;
+}
+.bm-btn-secondary:hover {
+  background: var(--background-soft);
+  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
+}
+
+.bm-btn-warm {
+  background: var(--warm);
+  color: var(--warm-foreground);
+  border-radius: 14px;
+  padding: 10px 18px;
+  font-weight: 700;
+  font-size: 13px;
+  border: 1px solid var(--warm-strong);
+  transition: filter 0.15s;
+}
+.bm-btn-warm:hover {
+  filter: brightness(1.05);
+}
+
+/* === 영웅 헤드라인 === */
+.bm-hero {
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+/* === 칩 (배지) === */
+.bm-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--background-soft);
+  color: var(--foreground-soft);
+  border: 1px solid var(--border);
+}
+.bm-chip-accent {
+  background: var(--accent-soft);
+  color: var(--accent-strong);
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+}
+.bm-chip-warm {
+  background: var(--warm-soft);
+  color: var(--warm-foreground);
+  border: 1px solid color-mix(in srgb, var(--warm) 40%, transparent);
+}
+.bm-chip-success {
+  background: var(--success-soft);
+  color: #065f46;
+  border: 1px solid color-mix(in srgb, var(--success) 30%, transparent);
+}
+.bm-chip-warn {
+  background: var(--warning-soft);
+  color: #92400e;
+  border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
+}
+.bm-chip-danger {
+  background: var(--danger-soft);
+  color: #991b1b;
+  border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
 }

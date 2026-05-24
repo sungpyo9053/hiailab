@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "HI AI LAB",
+  title: "HI AI LAB · 자판기처럼 골라 쓰는 AI 자동화",
   description:
-    "받은 메일에 정중한 답장을 만들어주는 셀프호스팅 AI 에이전트",
+    "본인 Gmail을 연결하고 자동화 에이전트를 활성화하세요. 본인 계정 안에서만 동작합니다.",
 };
 
 export default function RootLayout({

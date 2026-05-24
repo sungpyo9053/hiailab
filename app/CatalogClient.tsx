@@ -49,7 +49,6 @@ export default function CatalogClient() {
     return () => clearInterval(t);
   }, []);
 
-  // URL 의 ?connected / ?error
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     if (q.get("connected")) {
@@ -80,11 +79,8 @@ export default function CatalogClient() {
         body: JSON.stringify({ enabled }),
       });
       const d = await r.json();
-      if (!d.ok) {
-        setMsg(`⚠ ${d.error}`);
-      } else {
-        setMsg(enabled ? "✓ 에이전트를 활성화했어요" : "에이전트를 비활성화했어요");
-      }
+      if (!d.ok) setMsg(`⚠ ${d.error}`);
+      else setMsg(enabled ? "✓ 에이전트를 활성화했어요" : "에이전트를 비활성화했어요");
       await refresh();
     } catch (e) {
       setMsg(`⚠ ${(e as Error).message}`);
@@ -93,46 +89,41 @@ export default function CatalogClient() {
     }
   }
 
-  // 로딩
   if (!me) {
-    return (
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-sm text-white/40">
-        로딩 중…
-      </div>
-    );
+    return <div className="bm-card p-8 text-center text-sm text-[var(--foreground-muted)]">로딩 중…</div>;
   }
 
-  // saas + 미로그인 → 로그인 화면
+  // saas + 미로그인 → 히어로 로그인
   if (me.mode === "saas" && !me.user) {
     return (
-      <section className="rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-transparent p-10 text-center">
-        <div className="text-5xl mb-4">✉️</div>
-        <h2 className="text-2xl font-bold">메일 자동화, 자판기처럼 골라 쓰세요</h2>
-        <p className="mt-3 text-sm text-white/60">
-          본인 Gmail로 로그인하면 자동화 에이전트들을 활성화할 수 있습니다.
+      <section className="bm-card p-10 text-center" style={{ background: "var(--accent-soft)", borderColor: "color-mix(in srgb, var(--accent) 25%, transparent)" }}>
+        <div className="text-6xl mb-4">✉️</div>
+        <h2 className="bm-hero text-3xl text-[var(--foreground)]">
+          메일 자동화, 자판기처럼 골라 쓰세요
+        </h2>
+        <p className="mt-4 text-[15px] leading-relaxed text-[var(--foreground-soft)]">
+          본인 Gmail로 로그인하면 자동화 에이전트들을 활성화할 수 있어요.
           <br />
-          메일 내용은 본인 계정 안에서만 처리됩니다. 자동 발송은 절대 일어나지 않아요.
+          메일 내용은 본인 계정 안에서만 처리됩니다.{" "}
+          <b className="text-[var(--foreground)]">자동 발송은 절대 일어나지 않아요.</b>
         </p>
         <a
           href="/api/gmail/auth"
-          className="mt-6 inline-block rounded-xl bg-[var(--accent)] px-6 py-3 text-sm font-semibold text-black hover:brightness-110"
+          className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-[var(--accent)] px-7 py-4 text-base font-bold text-white shadow-md transition hover:brightness-105"
         >
           📨 Gmail로 시작하기
         </a>
-        <p className="mt-6 text-xs text-white/40">
-          Google 동의 화면에서 받은편지함 읽기 · 임시보관함 작성 권한을 허락하면 즉시 동작합니다.
+        <p className="mt-4 text-xs text-[var(--foreground-muted)]">
+          받은편지함 읽기 · 임시보관함 작성 권한을 허락하면 즉시 시작됩니다.
         </p>
-        {msg && (
-          <p className="mt-4 text-xs text-yellow-300">{msg}</p>
-        )}
+        {msg && <p className="mt-4 text-xs text-[var(--warning)]">{msg}</p>}
       </section>
     );
   }
 
-  // 로딩
   if (!data) {
     return (
-      <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-6 text-sm text-white/40">
+      <div className="bm-card p-6 text-sm text-[var(--foreground-muted)]">
         에이전트 목록 불러오는 중…
       </div>
     );
@@ -144,29 +135,32 @@ export default function CatalogClient() {
   return (
     <>
       {/* 상단 요약 */}
-      <section className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-        <div className="flex flex-wrap items-center gap-4 text-sm">
+      <section className="bm-card-soft mb-5 px-5 py-4">
+        <div className="flex flex-wrap items-center gap-4 text-[14px]">
           <div>
-            📧 <span className="text-white/80">{data.accountInfo.gmailEmail ?? "Gmail 미연결"}</span>
+            📧 <span className="font-semibold text-[var(--foreground)]">{data.accountInfo.gmailEmail ?? "Gmail 미연결"}</span>
           </div>
           <div>
             🤖 AI:{" "}
             <span
               className={
-                data.accountInfo.aiProvider === "none" ? "text-yellow-300" : "text-emerald-300"
+                "font-semibold " +
+                (data.accountInfo.aiProvider === "none"
+                  ? "text-[var(--warning)]"
+                  : "text-[var(--accent-strong)]")
               }
             >
               {PROVIDER_LABEL[data.accountInfo.aiProvider]}
             </span>
           </div>
-          <div className="ml-auto text-xs text-white/50">
-            활성: {enabledCount} / 사용 가능: {availableCount} / 전체: {data.agents.length}
+          <div className="ml-auto text-[12px] text-[var(--foreground-soft)]">
+            활성 <b className="text-[var(--accent-strong)]">{enabledCount}</b> / 사용 가능 {availableCount} / 전체 {data.agents.length}
           </div>
         </div>
       </section>
 
       {msg && (
-        <div className="mb-4 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80">
+        <div className="bm-card-soft mb-4 px-4 py-2.5 text-[13px] text-[var(--foreground)]">
           {msg}
         </div>
       )}
@@ -182,8 +176,8 @@ export default function CatalogClient() {
         ))}
       </div>
 
-      <p className="mt-8 text-xs text-white/40">
-        💡 새 에이전트는 계속 추가됩니다. 원하는 자동화가 있으면 GitHub Issues 에 알려주세요.
+      <p className="mt-8 text-center text-[12px] text-[var(--foreground-muted)]">
+        💡 새 에이전트는 계속 추가됩니다. 원하는 자동화는 GitHub Issues로!
       </p>
     </>
   );
@@ -204,13 +198,13 @@ function AgentCard({
 
   return (
     <div
-      className={
-        "relative flex flex-col rounded-2xl border p-5 " +
-        (isEnabled
-          ? "border-emerald-400/40 bg-emerald-400/[0.04]"
+      className="bm-card relative flex flex-col p-5"
+      style={
+        isEnabled
+          ? { borderColor: "var(--accent)", boxShadow: "0 0 0 3px var(--accent-soft)" }
           : isComingSoon
-            ? "border-white/5 bg-white/[0.01]"
-            : "border-white/10 bg-white/[0.03]")
+            ? { background: "var(--background-soft)", boxShadow: "none" }
+            : undefined
       }
     >
       <div className="mb-3 flex items-start justify-between">
@@ -218,27 +212,29 @@ function AgentCard({
         <StatusBadge isEnabled={isEnabled} isComingSoon={isComingSoon} canActivate={canActivate} />
       </div>
 
-      <h3 className={"text-lg font-semibold " + (isComingSoon ? "text-white/50" : "text-white/95")}>
+      <h3
+        className={
+          "bm-hero text-[20px] " +
+          (isComingSoon ? "text-[var(--foreground-muted)]" : "text-[var(--foreground)]")
+        }
+      >
         {agent.name}
       </h3>
-      <p className="mt-1 text-xs leading-relaxed text-white/55">{agent.tagline}</p>
+      <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--foreground-soft)]">
+        {agent.tagline}
+      </p>
 
       <div className="mt-3 flex flex-wrap gap-1.5">
-        <span className="rounded-md border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] text-white/50">
-          {CATEGORY_LABEL[agent.category]}
-        </span>
+        <span className="bm-chip">{CATEGORY_LABEL[agent.category]}</span>
         {agent.requirements.map((r) => (
-          <span
-            key={r.key}
-            className="rounded-md border border-white/10 bg-white/5 px-1.5 py-0.5 text-[10px] text-white/50"
-          >
+          <span key={r.key} className="bm-chip">
             {r.label}
           </span>
         ))}
       </div>
 
       {!isComingSoon && !agent.prereqMet && agent.missingPrereqs.length > 0 && (
-        <div className="mt-3 rounded-md border border-yellow-400/20 bg-yellow-400/[0.06] px-2.5 py-1.5 text-[11px] text-yellow-200">
+        <div className="bm-chip-warn mt-3 block rounded-xl p-2.5 text-[12px] leading-relaxed">
           ⚠ 활성화하려면 먼저 필요해요: <b>{agent.missingPrereqs.join(", ")}</b>
           <br />
           <Link href="/setup" className="underline">
@@ -247,30 +243,28 @@ function AgentCard({
         </div>
       )}
 
-      <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-white/5 pt-3">
+      <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-[var(--border-soft)] pt-3">
         {isComingSoon ? (
-          <span className="text-xs text-white/40">곧 추가됩니다</span>
+          <span className="text-[12px] text-[var(--foreground-muted)]">곧 추가됩니다</span>
         ) : (
           <>
             <button
               onClick={() => onToggle(!isEnabled)}
               disabled={!canActivate || toggling}
-              className={
-                "rounded-lg px-3 py-1.5 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-40 " +
-                (isEnabled
-                  ? "border border-white/20 bg-white/5 text-white/80 hover:bg-white/10"
-                  : "bg-[var(--accent)] text-black")
-              }
+              className={isEnabled ? "bm-btn-secondary" : "bm-btn-primary"}
             >
               {toggling ? "…" : isEnabled ? "비활성화" : "활성화"}
             </button>
             {agent.id === "email-reply" && (
-              <Link href="/agent" className="text-xs text-white/50 underline hover:text-white">
-                상세 상태 보기 →
+              <Link
+                href="/agent"
+                className="text-[12px] text-[var(--accent-strong)] underline hover:text-[var(--accent)]"
+              >
+                상세 보기 →
               </Link>
             )}
             {isEnabled && agent.activation && (
-              <span className="ml-auto text-[10px] text-white/40">
+              <span className="ml-auto text-[11px] text-[var(--foreground-muted)]">
                 {new Date(agent.activation.activatedAt).toLocaleDateString("ko-KR")} 활성화
               </span>
             )}
@@ -291,30 +285,18 @@ function StatusBadge({
   canActivate: boolean;
 }) {
   if (isComingSoon) {
-    return (
-      <span className="rounded-full border border-white/15 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-white/50">
-        곧 추가
-      </span>
-    );
+    return <span className="bm-chip">곧 추가</span>;
   }
   if (isEnabled) {
     return (
-      <span className="flex items-center gap-1 rounded-full border border-emerald-400/40 bg-emerald-400/15 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
-        <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+      <span className="bm-chip-success">
+        <span className="inline-block h-1.5 w-1.5 rounded-full bg-[var(--success)] animate-pulse" />
         동작 중
       </span>
     );
   }
   if (!canActivate) {
-    return (
-      <span className="rounded-full border border-yellow-400/30 bg-yellow-400/10 px-2 py-0.5 text-[10px] font-semibold text-yellow-300">
-        준비 필요
-      </span>
-    );
+    return <span className="bm-chip-warn">준비 필요</span>;
   }
-  return (
-    <span className="rounded-full border border-white/20 bg-white/5 px-2 py-0.5 text-[10px] font-semibold text-white/60">
-      꺼짐
-    </span>
-  );
+  return <span className="bm-chip">꺼짐</span>;
 }
