@@ -10,7 +10,8 @@ const STORE_FILE = path.join(STORE_DIR, "config.enc.json");
 
 export type ConfigKey =
   | "OPENAI_API_KEY"
-  | "GEMINI_API_KEY" // Google AI Studio Gemini key (무료 quota 큼)
+  | "GEMINI_API_KEY"
+  | "GROQ_API_KEY" // Groq (Llama 3.3 70B, 카드 등록 없이 무료)
   | "SMTP_HOST"
   | "SMTP_PORT"
   | "SMTP_USER"
@@ -26,6 +27,7 @@ export type ConfigKey =
 export const ALL_CONFIG_KEYS: ConfigKey[] = [
   "OPENAI_API_KEY",
   "GEMINI_API_KEY",
+  "GROQ_API_KEY",
   "SMTP_HOST",
   "SMTP_PORT",
   "SMTP_USER",

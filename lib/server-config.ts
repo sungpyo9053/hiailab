@@ -32,6 +32,10 @@ export async function getGeminiKey(): Promise<string | null> {
   return resolveValue("GEMINI_API_KEY");
 }
 
+export async function getGroqKey(): Promise<string | null> {
+  return resolveValue("GROQ_API_KEY");
+}
+
 export async function getKakaoAccessToken(): Promise<string | null> {
   return resolveValue("KAKAO_ACCESS_TOKEN");
 }
@@ -72,14 +76,15 @@ export type RuntimeModes = {
 };
 
 export async function getRuntimeModes(): Promise<RuntimeModes> {
-  const [openai, gemini, smtp, kakao] = await Promise.all([
+  const [openai, gemini, groq, smtp, kakao] = await Promise.all([
     getOpenAIKey(),
     getGeminiKey(),
+    getGroqKey(),
     getSmtpConfig(),
     getKakaoAccessToken(),
   ]);
   return {
-    ai: openai || gemini ? "real" : "mock",
+    ai: openai || gemini || groq ? "real" : "mock",
     email: smtp ? "real" : "mock",
     kakao: kakao ? "real" : "mock",
   };
@@ -89,7 +94,8 @@ export async function getRuntimeModes(): Promise<RuntimeModes> {
 export type SetupStatus = {
   openai: { configured: boolean; masked: string; source: "env" | "stored" | "none" };
   gemini: { configured: boolean; masked: string; source: "env" | "stored" | "none" };
-  activeProvider: "gemini" | "openai" | "none";
+  groq: { configured: boolean; masked: string; source: "env" | "stored" | "none" };
+  activeProvider: "groq" | "gemini" | "openai" | "none";
   google: {
     clientIdConfigured: boolean;
     clientSecretConfigured: boolean;
@@ -113,10 +119,11 @@ export type SetupStatus = {
 };
 
 export async function getSetupStatus(): Promise<SetupStatus> {
-  const [openai, gemini, host, portStr, user, pass, defaultTo, kakao, gClientId, gClientSecret] =
+  const [openai, gemini, groq, host, portStr, user, pass, defaultTo, kakao, gClientId, gClientSecret] =
     await Promise.all([
       resolveWithSource("OPENAI_API_KEY"),
       resolveWithSource("GEMINI_API_KEY"),
+      resolveWithSource("GROQ_API_KEY"),
       resolveWithSource("SMTP_HOST"),
       resolveWithSource("SMTP_PORT"),
       resolveWithSource("SMTP_USER"),
@@ -152,9 +159,10 @@ export async function getSetupStatus(): Promise<SetupStatus> {
 
   const modes = await getRuntimeModes();
 
-  // 활성 provider 결정: Gemini 우선
+  // 활성 provider 결정: Groq > Gemini > OpenAI
   let activeProvider: SetupStatus["activeProvider"] = "none";
-  if (gemini.value) activeProvider = "gemini";
+  if (groq.value) activeProvider = "groq";
+  else if (gemini.value) activeProvider = "gemini";
   else if (openai.value) activeProvider = "openai";
 
   return {
@@ -167,6 +175,11 @@ export async function getSetupStatus(): Promise<SetupStatus> {
       configured: Boolean(gemini.value),
       masked: maskSecret(gemini.value),
       source: gemini.source,
+    },
+    groq: {
+      configured: Boolean(groq.value),
+      masked: maskSecret(groq.value),
+      source: groq.source,
     },
     activeProvider,
     google: {
