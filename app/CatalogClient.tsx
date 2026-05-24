@@ -96,21 +96,18 @@ export default function CatalogClient() {
   // saas + 미로그인 → 히어로 로그인
   if (me.mode === "saas" && !me.user) {
     return (
-      <section className="bm-card p-10 text-center" style={{ background: "var(--accent-soft)", borderColor: "color-mix(in srgb, var(--accent) 25%, transparent)" }}>
+      <section className="bm-card-hero p-12 text-center">
         <div className="text-6xl mb-4">✉️</div>
-        <h2 className="bm-hero text-3xl text-[var(--foreground)]">
-          메일 자동화, 자판기처럼 골라 쓰세요
+        <h2 className="bm-hero text-[34px] text-[var(--foreground)]">
+          메일 자동화, <span className="text-[var(--hot)]">자판기처럼</span> 골라 쓰세요
         </h2>
         <p className="mt-4 text-[15px] leading-relaxed text-[var(--foreground-soft)]">
           본인 Gmail로 로그인하면 자동화 에이전트들을 활성화할 수 있어요.
           <br />
-          메일 내용은 본인 계정 안에서만 처리됩니다.{" "}
+          메일 내용은 본인 계정 안에서만 처리되고{" "}
           <b className="text-[var(--foreground)]">자동 발송은 절대 일어나지 않아요.</b>
         </p>
-        <a
-          href="/api/gmail/auth"
-          className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-[var(--accent)] px-7 py-4 text-base font-bold text-white shadow-md transition hover:brightness-105"
-        >
+        <a href="/api/gmail/auth" className="bm-btn-hot mt-8 inline-flex items-center gap-2">
           📨 Gmail로 시작하기
         </a>
         <p className="mt-4 text-xs text-[var(--foreground-muted)]">

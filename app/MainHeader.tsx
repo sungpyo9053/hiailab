@@ -37,8 +37,11 @@ export default function MainHeader() {
     <header className="mb-10">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="bm-hero text-[40px] leading-none text-[var(--foreground)]">
-            <span className="text-[var(--accent)]">HI AI</span> LAB <span className="text-[28px]">✉️</span>
+          <h1 className="bm-hero text-[42px] leading-none text-[var(--foreground)]">
+            <span className="text-[var(--hot)]">HI</span>{" "}
+            <span className="text-[var(--foreground)]">AI</span>{" "}
+            <span className="text-[var(--accent)]">LAB</span>
+            <span className="ml-2 text-[28px]">✉️</span>
           </h1>
           <p className="mt-3 text-[15px] text-[var(--foreground-soft)]">
             자동화 에이전트를 자판기처럼 골라 활성화하세요. 본인 계정 안에서만 동작합니다.
