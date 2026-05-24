@@ -7,13 +7,13 @@ import {
   isGmailConnected,
   listRecentInboxMessageIds,
 } from "./gmail";
+import { callLLM, getActiveProvider } from "./llm";
 import {
   getRecentProcessed,
   hasSeenMessage,
   recordProcessed,
   type ProcessedEntry,
 } from "./processed-store";
-import { getOpenAIKey } from "./server-config";
 
 // 자동화 메인 로직.
 // 1) 받은편지함의 최근 새 메일 목록을 가져온다 (읽음 처리 X)
@@ -37,9 +37,6 @@ async function generateReplyBody(mail: {
   from: string;
   body: string;
 }): Promise<string | null> {
-  const key = await getOpenAIKey();
-  if (!key) return null;
-
   const userPrompt = [
     "다음은 받은 메일입니다. 답장 초안을 작성해 주세요.",
     "",
@@ -51,30 +48,12 @@ async function generateReplyBody(mail: {
     "---",
   ].join("\n");
 
-  try {
-    const resp = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${key}`,
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        temperature: 0.4,
-        messages: [
-          { role: "system", content: REPLY_SYSTEM_PROMPT },
-          { role: "user", content: userPrompt },
-        ],
-      }),
-    });
-    if (!resp.ok) return null;
-    const data = (await resp.json()) as {
-      choices?: { message?: { content?: string } }[];
-    };
-    return data.choices?.[0]?.message?.content?.trim() ?? null;
-  } catch {
-    return null;
-  }
+  return callLLM({
+    systemInstruction: REPLY_SYSTEM_PROMPT,
+    userPrompt,
+    maxTokens: 800,
+    temperature: 0.4,
+  });
 }
 
 // 발신자 헤더에서 이메일 주소만 추출. "이름 <user@example.com>" → "user@example.com"
@@ -120,11 +99,13 @@ export async function runAgentOnce(): Promise<AgentRunResult> {
   if (!(await isGmailConnected())) {
     return { ...result, ok: false, error: "Gmail이 연결되지 않았습니다." };
   }
-  if (!(await getOpenAIKey())) {
+  const provider = await getActiveProvider();
+  if (provider === "none") {
     return {
       ...result,
       ok: false,
-      error: "OPENAI_API_KEY 가 없습니다. (분류기와 답장 작성에 필요)",
+      error:
+        "AI 키가 없습니다. /setup 에서 GEMINI_API_KEY(무료) 또는 OPENAI_API_KEY를 저장하세요.",
     };
   }
 

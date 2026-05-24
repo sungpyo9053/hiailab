@@ -10,6 +10,7 @@ const STORE_FILE = path.join(STORE_DIR, "config.enc.json");
 
 export type ConfigKey =
   | "OPENAI_API_KEY"
+  | "GEMINI_API_KEY" // Google AI Studio Gemini key (무료 quota 큼)
   | "SMTP_HOST"
   | "SMTP_PORT"
   | "SMTP_USER"
@@ -24,6 +25,7 @@ export type ConfigKey =
 
 export const ALL_CONFIG_KEYS: ConfigKey[] = [
   "OPENAI_API_KEY",
+  "GEMINI_API_KEY",
   "SMTP_HOST",
   "SMTP_PORT",
   "SMTP_USER",

@@ -28,6 +28,10 @@ export async function getOpenAIKey(): Promise<string | null> {
   return resolveValue("OPENAI_API_KEY");
 }
 
+export async function getGeminiKey(): Promise<string | null> {
+  return resolveValue("GEMINI_API_KEY");
+}
+
 export async function getKakaoAccessToken(): Promise<string | null> {
   return resolveValue("KAKAO_ACCESS_TOKEN");
 }
@@ -68,13 +72,14 @@ export type RuntimeModes = {
 };
 
 export async function getRuntimeModes(): Promise<RuntimeModes> {
-  const [openai, smtp, kakao] = await Promise.all([
+  const [openai, gemini, smtp, kakao] = await Promise.all([
     getOpenAIKey(),
+    getGeminiKey(),
     getSmtpConfig(),
     getKakaoAccessToken(),
   ]);
   return {
-    ai: openai ? "real" : "mock",
+    ai: openai || gemini ? "real" : "mock",
     email: smtp ? "real" : "mock",
     kakao: kakao ? "real" : "mock",
   };
@@ -83,6 +88,8 @@ export async function getRuntimeModes(): Promise<RuntimeModes> {
 // /api/setup/status 가 쓰는 뷰
 export type SetupStatus = {
   openai: { configured: boolean; masked: string; source: "env" | "stored" | "none" };
+  gemini: { configured: boolean; masked: string; source: "env" | "stored" | "none" };
+  activeProvider: "gemini" | "openai" | "none";
   google: {
     clientIdConfigured: boolean;
     clientSecretConfigured: boolean;
@@ -106,9 +113,10 @@ export type SetupStatus = {
 };
 
 export async function getSetupStatus(): Promise<SetupStatus> {
-  const [openai, host, portStr, user, pass, defaultTo, kakao, gClientId, gClientSecret] =
+  const [openai, gemini, host, portStr, user, pass, defaultTo, kakao, gClientId, gClientSecret] =
     await Promise.all([
       resolveWithSource("OPENAI_API_KEY"),
+      resolveWithSource("GEMINI_API_KEY"),
       resolveWithSource("SMTP_HOST"),
       resolveWithSource("SMTP_PORT"),
       resolveWithSource("SMTP_USER"),
@@ -144,12 +152,23 @@ export async function getSetupStatus(): Promise<SetupStatus> {
 
   const modes = await getRuntimeModes();
 
+  // 활성 provider 결정: Gemini 우선
+  let activeProvider: SetupStatus["activeProvider"] = "none";
+  if (gemini.value) activeProvider = "gemini";
+  else if (openai.value) activeProvider = "openai";
+
   return {
     openai: {
       configured: Boolean(openai.value),
       masked: maskSecret(openai.value),
       source: openai.source,
     },
+    gemini: {
+      configured: Boolean(gemini.value),
+      masked: maskSecret(gemini.value),
+      source: gemini.source,
+    },
+    activeProvider,
     google: {
       clientIdConfigured: Boolean(gClientId.value),
       clientSecretConfigured: Boolean(gClientSecret.value),

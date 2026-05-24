@@ -9,6 +9,8 @@ type Mode = "real" | "mock";
 
 type SetupStatus = {
   openai: { configured: boolean; masked: string; source: "env" | "stored" | "none" };
+  gemini: { configured: boolean; masked: string; source: "env" | "stored" | "none" };
+  activeProvider: "gemini" | "openai" | "none";
   google: {
     clientIdConfigured: boolean;
     clientSecretConfigured: boolean;
@@ -32,6 +34,7 @@ export default function SetupClient() {
   const [loadingStatus, setLoadingStatus] = useState(true);
 
   // 입력 필드
+  const [geminiKey, setGeminiKey] = useState("");
   const [openaiKey, setOpenaiKey] = useState("");
   const [gClientId, setGClientId] = useState("");
   const [gClientSecret, setGClientSecret] = useState("");
@@ -39,6 +42,7 @@ export default function SetupClient() {
 
   // 결과 상태
   type ResultState = { kind: "loading" | "success" | "error"; text: string; mock?: boolean };
+  const [geminiResult, setGeminiResult] = useState<ResultState | null>(null);
   const [openaiResult, setOpenaiResult] = useState<ResultState | null>(null);
   const [googleResult, setGoogleResult] = useState<ResultState | null>(null);
 
@@ -149,59 +153,124 @@ export default function SetupClient() {
         </div>
       )}
 
-      {/* === 1) OpenAI === */}
+      {/* === 1) AI 키 — Gemini 또는 OpenAI === */}
       <section className="mb-5 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
         <div className="mb-2 flex flex-wrap items-center gap-3">
-          <h2 className="text-base font-semibold">1) OpenAI API 키</h2>
-          {status && (
-            <StatusPill ok={status.openai.configured} ifTrue="저장됨" ifFalse="비어있음" />
+          <h2 className="text-base font-semibold">1) AI 키 (둘 중 하나만 있으면 됨)</h2>
+          {status && status.activeProvider !== "none" && (
+            <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300">
+              사용 중: {status.activeProvider === "gemini" ? "Gemini" : "OpenAI"}
+            </span>
           )}
         </div>
-        <p className="mb-3 text-xs text-white/60">
-          AI에게 답장 초안을 부탁할 때 사용합니다. <b>없으면 가짜 샘플(MOCK)만 출력</b>되고 실제 답장은 안 만들어져요.{" "}
-          <a
-            href="https://github.com/sungpyo9053/hiailab/blob/main/docs/SETUP_OPENAI.md"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline text-white/70 hover:text-white"
-          >
-            발급 방법 보기 ↗
-          </a>
+        <p className="mb-4 text-xs leading-relaxed text-white/60">
+          AI가 메일을 분류하고 답장 초안을 작성할 때 사용합니다. <b>Gemini는 무료 quota가 커서 추천 (결제 등록 불필요)</b>.
+          둘 다 입력하면 Gemini 우선 사용.
         </p>
-        {status?.openai.configured && (
-          <p className="mb-2 text-xs text-white/40">
-            현재 저장된 값: <code>{status.openai.masked}</code> ({status.openai.source})
+
+        {/* Gemini (추천) */}
+        <div className="mb-4 rounded-xl border border-emerald-400/20 bg-emerald-400/[0.04] p-4">
+          <div className="mb-2 flex flex-wrap items-center gap-2">
+            <span className="text-sm font-semibold">🟢 Google Gemini (추천 · 무료)</span>
+            {status && <StatusPill ok={status.gemini.configured} ifTrue="저장됨" ifFalse="비어있음" />}
+            <a
+              href="https://aistudio.google.com/apikey"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ml-auto text-xs text-white/60 underline hover:text-white"
+            >
+              발급받기 ↗
+            </a>
+          </div>
+          <p className="mb-2 text-xs text-white/50">
+            분당 15회 / 일 1500회 무료. Google 계정만 있으면 결제 등록 없이 즉시 발급.
           </p>
-        )}
-        <label className="mb-1 block text-xs text-white/60">OpenAI에서 발급한 키 (sk-... 로 시작)</label>
-        <input
-          type="password"
-          value={openaiKey}
-          onChange={(e) => setOpenaiKey(e.target.value)}
-          placeholder="sk-..."
-          className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
-        />
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button
-            onClick={() => {
-              if (!openaiKey.trim() || !status?.encryption.configured) return;
-              void save({ OPENAI_API_KEY: openaiKey }, setOpenaiResult).then(() =>
-                setOpenaiKey("")
-              );
-            }}
-            disabled={!openaiKey.trim() || !status?.encryption.configured}
-            className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            저장
-          </button>
-          <button
-            onClick={testOpenAI}
-            className="rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/5"
-          >
-            연결 테스트
-          </button>
+          {status?.gemini.configured && (
+            <p className="mb-2 text-xs text-white/40">
+              저장됨: <code>{status.gemini.masked}</code> ({status.gemini.source})
+            </p>
+          )}
+          <input
+            type="password"
+            value={geminiKey}
+            onChange={(e) => setGeminiKey(e.target.value)}
+            placeholder="AIzaSy..."
+            className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
+          />
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              onClick={() => {
+                if (!geminiKey.trim() || !status?.encryption.configured) return;
+                void save({ GEMINI_API_KEY: geminiKey }, setGeminiResult).then(() =>
+                  setGeminiKey("")
+                );
+              }}
+              disabled={!geminiKey.trim() || !status?.encryption.configured}
+              className="rounded-lg bg-[var(--accent)] px-3 py-1.5 text-xs font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              저장
+            </button>
+          </div>
+          <ResultLine r={geminiResult} />
         </div>
-        <ResultLine r={openaiResult} />
+
+        {/* OpenAI (선택) */}
+        <details className="rounded-xl border border-white/10 bg-white/[0.02] p-4">
+          <summary className="cursor-pointer text-sm text-white/60 hover:text-white/80">
+            🔵 OpenAI (선택 · 유료) — Gemini 안 쓸 때만 펼치기
+            {status?.openai.configured && (
+              <span className="ml-2 rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-[10px] text-emerald-300">
+                저장됨
+              </span>
+            )}
+          </summary>
+          <div className="mt-3">
+            <p className="mb-2 text-xs text-white/50">
+              pay-as-you-go (별도 결제 등록 필요). 답장 1건 ≈ ₩1~2.{" "}
+              <a
+                href="https://github.com/sungpyo9053/hiailab/blob/main/docs/SETUP_OPENAI.md"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="underline"
+              >
+                발급 가이드 ↗
+              </a>
+            </p>
+            {status?.openai.configured && (
+              <p className="mb-2 text-xs text-white/40">
+                저장됨: <code>{status.openai.masked}</code> ({status.openai.source})
+              </p>
+            )}
+            <input
+              type="password"
+              value={openaiKey}
+              onChange={(e) => setOpenaiKey(e.target.value)}
+              placeholder="sk-..."
+              className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
+            />
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button
+                onClick={() => {
+                  if (!openaiKey.trim() || !status?.encryption.configured) return;
+                  void save({ OPENAI_API_KEY: openaiKey }, setOpenaiResult).then(() =>
+                    setOpenaiKey("")
+                  );
+                }}
+                disabled={!openaiKey.trim() || !status?.encryption.configured}
+                className="rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                저장
+              </button>
+              <button
+                onClick={testOpenAI}
+                className="rounded-lg border border-white/20 px-3 py-1.5 text-xs hover:bg-white/5"
+              >
+                연결 테스트
+              </button>
+            </div>
+            <ResultLine r={openaiResult} />
+          </div>
+        </details>
       </section>
 
       {/* === 2) Google OAuth === */}
