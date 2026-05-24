@@ -1,0 +1,15 @@
+services:
+  autovending:
+    build: .
+    image: autovending:latest
+    container_name: autovending
+    ports:
+      - "3000:3000"
+    # .env.local 의 모든 값이 컨테이너 환경변수로 주입됩니다.
+    # 이 파일은 .gitignore 에 등록되어 있어 절대 커밋되지 않습니다.
+    env_file:
+      - .env.local
+    # /setup 에서 저장한 암호화 설정 파일을 호스트에 영구 보관
+    volumes:
+      - ./.autovending:/app/.autovending
+    restart: unless-stopped

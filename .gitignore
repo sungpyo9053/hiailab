@@ -1,0 +1,32 @@
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# next.js
+.next/
+out/
+build/
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# local env files — NEVER commit secrets
+.env
+.env.local
+.env*.local
+
+# 오토벤딩이 /setup에서 암호화 저장하는 폴더 — 절대 커밋 금지
+.autovending/
+
+# Claude Code 로컬 권한 설정 (사용자별 — 공개 금지)
+.claude/
+
+# typescript
+*.tsbuildinfo
