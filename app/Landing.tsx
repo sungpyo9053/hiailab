@@ -1,73 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
+import { useRef } from "react";
 
-// 비로그인 상태에서 보이는 랜딩 페이지 (스크롤 컨텐츠)
+// 비로그인 상태에서 보이는 랜딩 페이지 (스크롤 컨텐츠 + Pinned Scrollytelling)
 export default function Landing({ msg }: { msg?: string | null }) {
   return (
     <div className="-mx-5">
-      {/* === Hero === */}
-      <section
-        className="px-5 py-20 sm:py-28"
-        style={{
-          background:
-            "radial-gradient(120% 80% at 90% 0%, var(--hot-soft) 0%, transparent 60%), linear-gradient(180deg, var(--warm-soft) 0%, var(--background) 100%)",
-        }}
-      >
-        <div className="mx-auto max-w-3xl text-center">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-[110px] leading-none sm:text-[140px]"
-          >
-            ✉️
-          </motion.div>
-          <motion.h1
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
-            className="bm-hand mt-4 text-[44px] leading-[1.15] tracking-tight text-[var(--foreground)] sm:text-[56px]"
-          >
-            메일 답장,<br />
-            <span className="text-[var(--hot)]">AI 자판기</span>에서 뽑아 쓰세요
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-6 text-[16px] leading-relaxed text-[var(--foreground-soft)] sm:text-[18px]"
-          >
-            가입하고 Gmail만 연결하면 받은편지함을 AI가 알아서 처리해요.
-            <br />
-            답장은 <b className="text-[var(--foreground)]">임시보관함</b>에 자동으로 만들어두니까,
-            한 번 확인하고 보내기만.
-          </motion.p>
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="mt-10 flex flex-wrap items-center justify-center gap-3"
-          >
-            <Link href="/signup" className="bm-btn-hot" style={{ padding: "16px 28px", fontSize: 16 }}>
-              ✨ 무료로 시작하기
-            </Link>
-            <Link href="/login" className="bm-btn-secondary" style={{ padding: "15px 24px", fontSize: 15 }}>
-              로그인
-            </Link>
-          </motion.div>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.5 }}
-            className="mt-6 text-[12px] text-[var(--foreground-muted)]"
-          >
-            카드 등록 없음 · 자동 발송 없음 · 본인 계정 안에서만 동작
-          </motion.p>
-          {msg && <p className="mt-4 text-[12px] text-[var(--warning)]">{msg}</p>}
-        </div>
-      </section>
+      <ScrollyHero msg={msg} />
 
       {/* === 이렇게 동작해요 === */}
       <Section bg="white" title="이렇게 동작해요" subtitle="가입 → Gmail 연결 → 끝.">
@@ -128,7 +69,7 @@ export default function Landing({ msg }: { msg?: string | null }) {
         </div>
       </Section>
 
-      {/* === 마지막 CTA (다크 반전) === */}
+      {/* === 마지막 CTA === */}
       <section className="px-5 py-20" style={{ background: "var(--accent)" }}>
         <motion.div
           initial={{ opacity: 0, y: 24 }}
@@ -142,9 +83,7 @@ export default function Landing({ msg }: { msg?: string | null }) {
             지금 시작하면<br />
             오늘 받은 메일부터 정리돼요
           </h2>
-          <p className="mt-5 text-[15px] text-white/70">
-            가입 2분 · Gmail 연결 1분 · 끝.
-          </p>
+          <p className="mt-5 text-[15px] text-white/70">가입 2분 · Gmail 연결 1분 · 끝.</p>
           <Link
             href="/signup"
             className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-[var(--hot)] px-8 py-4 text-base font-bold text-white shadow-lg transition hover:brightness-105"
@@ -159,21 +98,11 @@ export default function Landing({ msg }: { msg?: string | null }) {
         <div className="mx-auto max-w-3xl">
           <p>HI AI LAB · 자동화 에이전트 SaaS</p>
           <p className="mt-2">
-            <a
-              href="https://github.com/sungpyo9053/hiailab"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline"
-            >
+            <a href="https://github.com/sungpyo9053/hiailab" target="_blank" rel="noopener noreferrer" className="underline">
               오픈소스
             </a>
             {" · "}
-            <a
-              href="https://github.com/sungpyo9053/hiailab/blob/main/docs/SELF_HOST_VS_SAAS.md"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline"
-            >
+            <a href="https://github.com/sungpyo9053/hiailab/blob/main/docs/SELF_HOST_VS_SAAS.md" target="_blank" rel="noopener noreferrer" className="underline">
               셀프호스팅 가이드
             </a>
           </p>
@@ -183,7 +112,150 @@ export default function Landing({ msg }: { msg?: string | null }) {
   );
 }
 
-// === 섹션 컴포넌트 ===
+// === 핀 스크롤 시네마틱 Hero ===
+// 컨테이너 높이 = 400vh (4단계)
+// 안의 sticky 박스가 화면에 고정되고, 스크롤 진행률에 따라 4단계 카피가 교차
+function ScrollyHero({ msg }: { msg?: string | null }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start start", "end end"],
+  });
+
+  // 4개 단계 — 각 단계가 약 25% 구간씩
+  const stage1Opacity = useTransform(scrollYProgress, [0.0, 0.18, 0.25], [1, 1, 0]);
+  const stage2Opacity = useTransform(scrollYProgress, [0.18, 0.28, 0.43, 0.52], [0, 1, 1, 0]);
+  const stage3Opacity = useTransform(scrollYProgress, [0.43, 0.55, 0.68, 0.78], [0, 1, 1, 0]);
+  const stage4Opacity = useTransform(scrollYProgress, [0.68, 0.8, 1.0], [0, 1, 1]);
+
+  // 각 단계의 y(슬라이드 업) 효과
+  const stage1Y = useTransform(scrollYProgress, [0, 0.25], [0, -40]);
+  const stage2Y = useTransform(scrollYProgress, [0.18, 0.52], [40, -40]);
+  const stage3Y = useTransform(scrollYProgress, [0.43, 0.78], [40, -40]);
+  const stage4Y = useTransform(scrollYProgress, [0.68, 1.0], [40, 0]);
+
+  // 배경 색상도 스크롤에 따라 변화 (옅은 코랄 → 옅은 골드 → 옅은 회색 → 차콜)
+  const bg = useTransform(
+    scrollYProgress,
+    [0, 0.33, 0.66, 1],
+    ["#FFE9E6", "#FFF5D6", "#F3F3F7", "#2D2A36"]
+  );
+  const textColor = useTransform(
+    scrollYProgress,
+    [0, 0.66, 0.85, 1],
+    ["#2D2A36", "#2D2A36", "#FFFFFF", "#FFFFFF"]
+  );
+
+  // 진행 인디케이터 (우측 점 4개)
+  return (
+    <div ref={ref} className="relative" style={{ height: "400vh" }}>
+      <motion.div
+        style={{ background: bg, color: textColor }}
+        className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden"
+      >
+        {/* 4단계 카피 */}
+        <Stage opacity={stage1Opacity} y={stage1Y}>
+          <div className="text-[120px] leading-none sm:text-[160px]">📥</div>
+          <h2 className="bm-hand mt-4 text-[40px] leading-[1.1] tracking-tight sm:text-[60px]">
+            받은편지함이<br />
+            매일같이 <span className="text-[var(--hot)]">쌓이고 있나요?</span>
+          </h2>
+        </Stage>
+
+        <Stage opacity={stage2Opacity} y={stage2Y}>
+          <div className="text-[120px] leading-none sm:text-[160px]">🤖</div>
+          <h2 className="bm-hand mt-4 text-[40px] leading-[1.1] tracking-tight sm:text-[60px]">
+            AI가 알아서<br />
+            <span className="text-[var(--hot)]">답장 초안</span>을 만들어둬요
+          </h2>
+        </Stage>
+
+        <Stage opacity={stage3Opacity} y={stage3Y}>
+          <div className="text-[120px] leading-none sm:text-[160px]">✏️</div>
+          <h2 className="bm-hand mt-4 text-[40px] leading-[1.1] tracking-tight sm:text-[60px]">
+            <span className="text-[var(--hot)]">Gmail 임시보관함</span>에<br />
+            바로 들어있어요
+          </h2>
+          <p className="mt-5 text-[15px] opacity-75 sm:text-[18px]">
+            확인하고 [보내기]만 누르면 끝. <b>자동 발송은 절대 일어나지 않아요.</b>
+          </p>
+        </Stage>
+
+        <Stage opacity={stage4Opacity} y={stage4Y}>
+          <div className="text-[80px] leading-none sm:text-[100px]">🚀</div>
+          <h2 className="bm-hand mt-4 text-[44px] leading-[1.1] tracking-tight sm:text-[64px]">
+            메일 답장,<br />
+            <span style={{ color: "var(--hot)" }}>AI 자판기</span>에서 뽑아 쓰세요
+          </h2>
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
+            <Link href="/signup" className="bm-btn-hot" style={{ padding: "16px 32px", fontSize: 17 }}>
+              ✨ 무료로 시작하기
+            </Link>
+            <Link href="/login" className="bm-btn-secondary" style={{ padding: "15px 24px", fontSize: 15 }}>
+              로그인
+            </Link>
+          </div>
+          <p className="mt-4 text-[12px] opacity-60">
+            카드 등록 없음 · 가입 2분 · 본인 계정 안에서만 동작
+          </p>
+          {msg && <p className="mt-2 text-[12px] text-[var(--warning)]">{msg}</p>}
+        </Stage>
+
+        {/* 우측 진행 인디케이터 (4개 점) */}
+        <ScrollIndicator scrollProgress={scrollYProgress} />
+
+        {/* 첫 화면 안내 — "↓ 스크롤" */}
+        <motion.div
+          style={{ opacity: useTransform(scrollYProgress, [0, 0.08], [1, 0]) }}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center text-[12px] opacity-70"
+        >
+          <div>↓</div>
+          <div className="mt-1">스크롤해보세요</div>
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+}
+
+function Stage({
+  opacity,
+  y,
+  children,
+}: {
+  opacity: MotionValue<number>;
+  y: MotionValue<number>;
+  children: React.ReactNode;
+}) {
+  return (
+    <motion.div
+      style={{ opacity, y }}
+      className="absolute left-0 right-0 top-1/2 -translate-y-1/2 px-5 text-center"
+    >
+      {children}
+    </motion.div>
+  );
+}
+
+function ScrollIndicator({ scrollProgress }: { scrollProgress: MotionValue<number> }) {
+  const dots = [0.05, 0.35, 0.6, 0.85];
+  return (
+    <div className="absolute right-6 top-1/2 -translate-y-1/2 flex flex-col gap-2">
+      {dots.map((threshold, i) => {
+        const opacity = useTransform(scrollProgress, [threshold - 0.05, threshold], [0.3, 1]);
+        const scale = useTransform(scrollProgress, [threshold - 0.05, threshold], [0.7, 1.2]);
+        return (
+          <motion.div
+            key={i}
+            style={{ opacity, scale }}
+            className="h-2 w-2 rounded-full bg-current"
+          />
+        );
+      })}
+    </div>
+  );
+}
+
+// === 그 외 섹션들 ===
 
 function Section({
   title,
@@ -231,7 +303,6 @@ function Section({
   );
 }
 
-// 좌/우 번갈아 슬라이드 — 더 임팩트 있는 reveal
 function StepCard({
   emoji,
   title,
