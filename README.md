@@ -126,6 +126,7 @@ flowchart LR
 | --- | --- |
 | 🤖 **Gmail 자동 답장 에이전트 켜고 싶어요** | [docs/SETUP_GMAIL_AUTOMATION.md](./docs/SETUP_GMAIL_AUTOMATION.md) |
 | 🛠️ **코드 고치거나 새 에이전트 추가하고 싶어요** | [docs/CUSTOMIZE.md](./docs/CUSTOMIZE.md) |
+| ☁️ **SaaS로 여러 사용자에게 제공하고 싶어요** | [docs/SELF_HOST_VS_SAAS.md](./docs/SELF_HOST_VS_SAAS.md) |
 | 🆕 개발자가 아니고, 일단 내 컴퓨터에서 실행해보고 싶어요 | [QUICKSTART.md](./QUICKSTART.md) (10~20분 가이드) |
 | 💻 개발자이고 바로 실행하고 싶어요 | 아래 "[🚀 따라서 세팅해보기 5단계](#-따라서-세팅해보기-진짜-핵심-5단계)" |
 | 🖥️ 개인 서버에 올려서 쓰고 싶어요 | [docs/DEPLOY_SERVER.md](./docs/DEPLOY_SERVER.md) |
