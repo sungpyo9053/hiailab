@@ -135,27 +135,35 @@ export default function CatalogClient() {
 
   return (
     <>
-      {/* 상단 요약 */}
-      <section className="bm-card-soft mb-5 px-5 py-4">
-        <div className="flex flex-wrap items-center gap-4 text-[14px]">
-          <div>
-            📧 <span className="font-semibold text-[var(--foreground)]">{data.accountInfo.gmailEmail ?? "Gmail 미연결"}</span>
+      {/* 상단 요약 — 사용자에게 의미 있는 정보 */}
+      <section className="mb-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className="bm-card-soft px-4 py-3.5">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--foreground-muted)]">
+            동작 중인 에이전트
           </div>
-          <div>
-            🤖 AI:{" "}
-            <span
-              className={
-                "font-semibold " +
-                (data.accountInfo.aiProvider === "none"
-                  ? "text-[var(--warning)]"
-                  : "text-[var(--accent-strong)]")
-              }
-            >
-              {PROVIDER_LABEL[data.accountInfo.aiProvider]}
-            </span>
+          <div className="mt-1 flex items-baseline gap-1">
+            <span className="text-[24px] font-bold text-[var(--hot)]">{enabledCount}</span>
+            <span className="text-[12px] text-[var(--foreground-soft)]">/ {availableCount}개 사용 가능</span>
           </div>
-          <div className="ml-auto text-[12px] text-[var(--foreground-soft)]">
-            활성 <b className="text-[var(--accent-strong)]">{enabledCount}</b> / 사용 가능 {availableCount} / 전체 {data.agents.length}
+        </div>
+        <div className="bm-card-soft px-4 py-3.5">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--foreground-muted)]">
+            Gmail 연결
+          </div>
+          <div className="mt-1 text-[14px] font-semibold text-[var(--foreground)]">
+            {data.accountInfo.gmailEmail ? (
+              <span className="text-[var(--success)]">✓ 연결됨</span>
+            ) : (
+              <span className="text-[var(--warning)]">미연결</span>
+            )}
+          </div>
+        </div>
+        <div className="bm-card-soft px-4 py-3.5">
+          <div className="text-[10px] font-bold uppercase tracking-wider text-[var(--foreground-muted)]">
+            새로운 에이전트
+          </div>
+          <div className="mt-1 text-[14px] font-semibold text-[var(--foreground)]">
+            🚀 곧 추가 예정
           </div>
         </div>
       </section>
