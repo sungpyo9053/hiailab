@@ -24,15 +24,17 @@
 
 ### 📸 동작 화면
 
-**메인 페이지** — 6단계 셋업 진행 파이프라인이 한눈에. 동작 중/꺼져 있어요 큰 배지로 상태 표시.
+**메인 페이지 — 에이전트 카탈로그 대시보드**
 
-![메인 페이지](docs/images/home.png)
+자판기처럼 자동화 에이전트를 골라서 활성화. 동작 중/꺼짐/곧 추가 상태가 한눈에.
 
-**`/agent` — 자동 답장 상태 / 조작**
+![카탈로그 메인](docs/images/catalog.png)
+
+**`/agent` — 메일 답장 에이전트 상세 상태**
 
 ![에이전트 페이지](docs/images/agent.png)
 
-**`/setup` — 단순화된 설정 마법사 (외계어 다 한국어로)**
+**`/setup` — 키/연결 관리**
 
 ![설정 페이지](docs/images/setup.png)
 
@@ -123,6 +125,7 @@ flowchart LR
 | 나는 이런 사용자입니다 | 어디로 가세요 |
 | --- | --- |
 | 🤖 **Gmail 자동 답장 에이전트 켜고 싶어요** | [docs/SETUP_GMAIL_AUTOMATION.md](./docs/SETUP_GMAIL_AUTOMATION.md) |
+| 🛠️ **코드 고치거나 새 에이전트 추가하고 싶어요** | [docs/CUSTOMIZE.md](./docs/CUSTOMIZE.md) |
 | 🆕 개발자가 아니고, 일단 내 컴퓨터에서 실행해보고 싶어요 | [QUICKSTART.md](./QUICKSTART.md) (10~20분 가이드) |
 | 💻 개발자이고 바로 실행하고 싶어요 | 아래 "[🚀 따라서 세팅해보기 5단계](#-따라서-세팅해보기-진짜-핵심-5단계)" |
 | 🖥️ 개인 서버에 올려서 쓰고 싶어요 | [docs/DEPLOY_SERVER.md](./docs/DEPLOY_SERVER.md) |
