@@ -1,29 +1,27 @@
 import Link from "next/link";
 import SetupClient from "./SetupClient";
 
-// 서버 컴포넌트 — lib/prompts.ts 같은 server-only 모듈은 import 하지 않는다.
-// 모든 동적 데이터는 클라이언트가 /api/setup/status 로 직접 가져온다.
 export default function SetupPage() {
   return (
     <main className="mx-auto max-w-3xl px-5 py-10">
       <nav className="mb-6 text-sm">
-        <Link href="/" className="text-white/50 hover:text-white">
-          ← HI AI LAB로
+        <Link href="/" className="text-[var(--foreground-soft)] hover:text-[var(--foreground)]">
+          ← 처음으로
         </Link>
       </nav>
 
       <header className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight">
-          HI AI LAB 설정 마법사 🛠️
-        </h1>
-        <p className="mt-2 text-sm text-white/60">
-          이 설정은 <b>이 서버에서만</b> 사용됩니다. 입력한 값은 외부 서비스로
-          전송되지 않으며, 암호화되어 이 컴퓨터의 <code>.hiailab/config.enc.json</code>{" "}
-          파일에만 저장됩니다.
+        <h1 className="bm-hero text-[32px] text-[var(--foreground)]">설정 🛠️</h1>
+        <p className="mt-3 text-[14px] leading-relaxed text-[var(--foreground-soft)]">
+          자동 답장이 동작하려면 <b>두 가지</b>만 설정하면 됩니다.
+          <br />
+          ① <b>AI 키</b> — 답장을 만들 때 사용 (Groq 무료 추천)
+          <br />
+          ② <b>Google 연결</b> — Gmail 받은편지함 읽기 + 임시보관함에 답장 초안 저장
         </p>
-        <p className="mt-1 text-xs text-white/40">
-          한 번 저장하면 마스킹된 형태(예: <code>sk-****abc</code>)로만
-          표시되고, 원문은 다시 화면에 보이지 않습니다.
+        <p className="mt-3 rounded-xl border border-[var(--border-soft)] bg-[var(--background-soft)] px-3 py-2 text-[12px] text-[var(--foreground-soft)]">
+          한 번 저장하면 가려진 형태(<code>sk-****abc</code>)로만 표시되고 원본은 안 보입니다.
+          이 서버에만 암호화 저장되며 외부 어디에도 전송되지 않습니다.
         </p>
       </header>
 
