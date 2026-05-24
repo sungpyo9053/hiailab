@@ -1,305 +1,323 @@
 "use client";
 
 import Link from "next/link";
-import { motion, useScroll, useTransform, type MotionValue } from "framer-motion";
-import { useRef } from "react";
+import { motion } from "framer-motion";
 
-// 비로그인 상태에서 보이는 랜딩 페이지 (스크롤 컨텐츠 + Pinned Scrollytelling)
+// ncloud 풍 SaaS 랜딩 — 단순 Hero + 제품 그리드 + 신뢰 + CTA
 export default function Landing({ msg }: { msg?: string | null }) {
   return (
     <div className="-mx-5">
-      <ScrollyHero msg={msg} />
+      {/* === 헤더 (네비) === */}
+      <header className="border-b border-[var(--border)] bg-white/90 backdrop-blur sticky top-0 z-50">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-5 py-3.5">
+          <Link href="/" className="flex items-center gap-2 text-[18px] font-extrabold tracking-tight">
+            <span className="text-[var(--accent)]">HI AI</span>
+            <span className="text-[var(--foreground)]">LAB</span>
+          </Link>
+          <nav className="hidden items-center gap-6 text-[13px] font-semibold text-[var(--foreground-soft)] sm:flex">
+            <a href="#agents" className="hover:text-[var(--foreground)]">에이전트</a>
+            <a href="#how" className="hover:text-[var(--foreground)]">동작 원리</a>
+            <a href="#safety" className="hover:text-[var(--foreground)]">보안</a>
+            <a href="#faq" className="hover:text-[var(--foreground)]">FAQ</a>
+          </nav>
+          <div className="flex items-center gap-2">
+            <Link href="/login" className="bm-btn-secondary" style={{ padding: "8px 14px", fontSize: 13 }}>
+              로그인
+            </Link>
+            <Link href="/signup" className="bm-btn-hot" style={{ padding: "9px 16px", fontSize: 13 }}>
+              무료 시작
+            </Link>
+          </div>
+        </div>
+      </header>
 
-      {/* === 이렇게 동작해요 === */}
-      <Section bg="white" title="이렇게 동작해요" subtitle="가입 → Gmail 연결 → 끝.">
-        <div className="mt-12 grid gap-6 sm:grid-cols-3">
+      {/* === Hero === */}
+      <section className="relative overflow-hidden border-b border-[var(--border)]" style={{ background: "linear-gradient(180deg, var(--accent-soft) 0%, #ffffff 100%)" }}>
+        <div className="mx-auto max-w-6xl px-5 py-24 sm:py-32">
+          <div className="grid items-center gap-12 sm:grid-cols-2">
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <span className="inline-block rounded-full border border-[var(--accent)] bg-white px-3 py-1 text-[11px] font-bold text-[var(--accent-deep)]">
+                AI 자동화 에이전트 SaaS
+              </span>
+              <h1 className="bm-hand mt-5 text-[44px] leading-[1.1] text-[var(--foreground)] sm:text-[56px]">
+                메일 답장,<br />
+                <span className="text-[var(--accent)]">AI가 알아서</span> 만들어 둡니다
+              </h1>
+              <p className="mt-5 text-[16px] leading-relaxed text-[var(--foreground-soft)] sm:text-[17px]">
+                Gmail을 연결하면 받은편지함을 자동 분석해서{" "}
+                <b className="text-[var(--foreground)]">답장 초안을 임시보관함에 자동 생성</b>합니다.
+                자동 발송은 절대 일어나지 않아요.
+              </p>
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <Link href="/signup" className="bm-btn-hot" style={{ padding: "14px 28px", fontSize: 15 }}>
+                  무료로 시작하기 →
+                </Link>
+                <a href="#how" className="bm-btn-secondary" style={{ padding: "13px 22px", fontSize: 14 }}>
+                  동작 원리 보기
+                </a>
+              </div>
+              <div className="mt-6 flex flex-wrap items-center gap-4 text-[12px] text-[var(--foreground-muted)]">
+                <span>✓ 카드 등록 불필요</span>
+                <span>✓ 자동 발송 없음</span>
+                <span>✓ 본인 계정 안에서만</span>
+              </div>
+              {msg && <p className="mt-4 text-[12px] text-[var(--warning)]">{msg}</p>}
+            </motion.div>
+
+            {/* 우측 시각 영역 — 모의 임시보관함 카드 */}
+            <motion.div
+              initial={{ opacity: 0, x: 24 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+              className="relative"
+            >
+              <div className="bm-card overflow-hidden p-0">
+                <div className="border-b border-[var(--border)] bg-[var(--background-soft)] px-5 py-3 text-[12px] font-semibold text-[var(--foreground-soft)]">
+                  📝 Gmail 임시보관함 (자동 생성됨)
+                </div>
+                <div className="space-y-3 p-5">
+                  {[
+                    { from: "김민재 매니저", subject: "Re: 다음 주 회의 일정 협의", time: "2분 전" },
+                    { from: "박지수 디자이너", subject: "Re: 시안 피드백 부탁드립니다", time: "12분 전" },
+                    { from: "이서연 PM", subject: "Re: 1차 마감 일정 조정", time: "1시간 전" },
+                  ].map((d, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.4, delay: 0.3 + i * 0.15 }}
+                      className="flex items-center gap-3 rounded-lg border border-[var(--border)] bg-white p-3"
+                    >
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--accent-soft)] text-[14px]">
+                        ✉️
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="truncate text-[13px] font-semibold text-[var(--foreground)]">
+                          {d.subject}
+                        </div>
+                        <div className="truncate text-[11px] text-[var(--foreground-muted)]">
+                          To: {d.from}
+                        </div>
+                      </div>
+                      <span className="shrink-0 text-[10px] text-[var(--foreground-muted)]">
+                        {d.time}
+                      </span>
+                    </motion.div>
+                  ))}
+                </div>
+                <div className="border-t border-[var(--border-soft)] bg-[var(--background-soft)] px-5 py-2.5 text-[11px] text-[var(--foreground-muted)]">
+                  🛡️ 자동 발송 절대 없음 · 본인이 확인 후 [보내기]
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* === 신뢰 강조 (통계) === */}
+      <section className="border-b border-[var(--border)] bg-white">
+        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-5 py-10 sm:grid-cols-4">
           {[
-            { emoji: "📥", title: "받은편지함 확인", desc: "5분마다 새 메일이 왔는지 살펴봐요. 읽음 처리 X." },
-            { emoji: "🤖", title: "AI가 분류", desc: "답장 필요한 메일 / 광고 / 알림 / 뉴스레터로 자동 구분." },
-            { emoji: "✏️", title: "임시보관함에 초안", desc: "답장 필요한 것만 AI가 글 써서 Drafts에 넣어둬요." },
+            { label: "분류 카테고리", value: "6종" },
+            { label: "처리 가능 메일 (일)", value: "14,400" },
+            { label: "OAuth scope", value: "최소 3개" },
+            { label: "자동 발송", value: "0건" },
           ].map((s, i) => (
-            <StepCard key={i} {...s} index={i + 1} />
+            <motion.div
+              key={i}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.4, delay: i * 0.05 }}
+              className="text-center"
+            >
+              <div className="bm-hand text-[36px] text-[var(--accent)]">{s.value}</div>
+              <div className="mt-1 text-[12px] text-[var(--foreground-soft)]">{s.label}</div>
+            </motion.div>
           ))}
         </div>
-        <div className="mt-10 rounded-2xl border border-[var(--border)] bg-[var(--background-soft)] px-5 py-4 text-center text-[13px] text-[var(--foreground-soft)]">
-          🛡️ <b className="text-[var(--foreground)]">자동 발송은 절대 일어나지 않아요.</b>{" "}
-          본인이 임시보관함에서 한 번 확인하고 보내기만 누르면 끝.
-        </div>
-      </Section>
+      </section>
 
-      {/* === 지원 에이전트 === */}
-      <Section bg="warm" title="지원하는 자동화" subtitle="자판기처럼 골라서 활성화하세요.">
-        <div className="mt-12 grid gap-4 sm:grid-cols-2">
-          {[
-            { emoji: "✉️", name: "메일 자동 답장", tagline: "받은 메일에 AI가 답장 초안을 임시보관함에 자동 작성", available: true },
-            { emoji: "📝", name: "회의록 자동 정리", tagline: "Google Meet 녹취를 요약·결정사항·할 일로 자동 정리" },
-            { emoji: "📅", name: "일정 자동 조율", tagline: "메일에 회의 일정 요청 오면 가능한 시간 자동 제안" },
-            { emoji: "🧹", name: "광고 메일 자동 정리", tagline: "광고/뉴스레터를 라벨로 분류 + 일괄 보관" },
-          ].map((a, i) => (
-            <AgentPreview key={i} {...a} index={i} />
-          ))}
+      {/* === 동작 원리 === */}
+      <section id="how" className="border-b border-[var(--border)] bg-[var(--background-soft)] py-24">
+        <div className="mx-auto max-w-6xl px-5">
+          <SectionHeader
+            tag="동작 원리"
+            title="가입 → Gmail 연결 → 끝."
+            subtitle="복잡한 설정 없이 5분 안에 자동화가 시작됩니다."
+          />
+          <div className="mt-14 grid gap-5 sm:grid-cols-3">
+            {[
+              { emoji: "📥", title: "받은편지함 자동 확인", desc: "5분마다 새 메일을 살펴봅니다. 읽음 처리는 하지 않아요." },
+              { emoji: "🤖", title: "AI 자동 분류", desc: "답장 필요 / 광고 / 뉴스레터 / 알림 등 6가지로 자동 구분." },
+              { emoji: "✏️", title: "답장 초안 자동 생성", desc: "답장 필요한 메일에만 AI가 글을 작성해 임시보관함에 저장." },
+            ].map((s, i) => (
+              <StepCard key={i} {...s} index={i + 1} />
+            ))}
+          </div>
         </div>
-      </Section>
+      </section>
 
-      {/* === 안심 포인트 === */}
-      <Section bg="white" title="이건 약속해요" subtitle="자동화는 편하면서 안전해야 하니까.">
-        <div className="mt-12 grid gap-5 sm:grid-cols-2">
-          {[
-            { emoji: "🚫", title: "자동 발송 절대 없음", desc: "drafts.create 까지만. 임시보관함에 들어가고, 발송은 본인이 직접." },
-            { emoji: "👀", title: "받은편지함 읽음 처리 X", desc: "gmail.readonly scope만 사용. '읽음' 표시는 사람이 직접 열 때만." },
-            { emoji: "🔒", title: "본인 계정 안에서만", desc: "메일 본문은 분석 직후 폐기. 어떤 DB에도 저장 안 함." },
-            { emoji: "💸", title: "무료 (Groq 사용 시)", desc: "Groq API는 카드 등록 없이 일 14,400회 무료. 더 쓰려면 본인 키 입력." },
-          ].map((s, i) => (
-            <PromiseCard key={i} {...s} index={i} />
-          ))}
+      {/* === 에이전트 그리드 === */}
+      <section id="agents" className="border-b border-[var(--border)] bg-white py-24">
+        <div className="mx-auto max-w-6xl px-5">
+          <SectionHeader
+            tag="에이전트"
+            title="자판기처럼 골라 활성화"
+            subtitle="필요한 자동화만 선택해서 켜세요. 계속 추가되고 있습니다."
+          />
+          <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { emoji: "✉️", name: "메일 자동 답장", tagline: "받은 메일에 답장 초안을 임시보관함에 자동 작성", available: true },
+              { emoji: "📝", name: "회의록 자동 정리", tagline: "Google Meet 녹취를 요약·결정사항·할 일로" },
+              { emoji: "📅", name: "일정 자동 조율", tagline: "회의 일정 요청에 가능 시간 자동 제안" },
+              { emoji: "🧹", name: "광고 메일 정리", tagline: "광고/뉴스레터 자동 분류 + 일괄 보관" },
+            ].map((a, i) => (
+              <AgentPreview key={i} {...a} index={i} />
+            ))}
+          </div>
         </div>
-      </Section>
+      </section>
+
+      {/* === 보안/약속 === */}
+      <section id="safety" className="border-b border-[var(--border)] bg-[var(--background-soft)] py-24">
+        <div className="mx-auto max-w-6xl px-5">
+          <SectionHeader
+            tag="보안"
+            title="민감한 메일이라 더 신중하게"
+            subtitle="자동화는 편하면서 안전해야 합니다."
+          />
+          <div className="mt-14 grid gap-5 sm:grid-cols-2">
+            {[
+              { emoji: "🚫", title: "자동 발송 절대 없음", desc: "Gmail Drafts API까지만 사용. 임시보관함에 들어가고, 발송은 본인이 직접 확인 후." },
+              { emoji: "👀", title: "받은편지함 읽음 처리 X", desc: "gmail.readonly scope만 사용. 사람이 직접 열기 전에는 '읽음' 표시 안 됨." },
+              { emoji: "🔒", title: "본인 계정 안에서만", desc: "메일 본문은 분류·답장 생성 직후 즉시 폐기. DB나 디스크에 저장 안 함." },
+              { emoji: "💸", title: "무료 (Groq Llama 3.3 70B)", desc: "카드 등록 없이 분당 30회 / 일 14,400회 무료. 더 필요하면 본인 키 입력." },
+            ].map((s, i) => (
+              <PromiseCard key={i} {...s} index={i} />
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* === FAQ === */}
-      <Section bg="soft" title="자주 묻는 질문" subtitle="">
-        <div className="mt-10 mx-auto max-w-2xl space-y-3">
-          {[
-            { q: "비용이 정말 무료인가요?", a: "네. Groq API 무료 quota (분당 30회 / 일 14,400회) 안에서 동작합니다. 더 큰 사용량이 필요하면 본인 OpenAI/Gemini 키를 /설정에 입력하면 됩니다." },
-            { q: "내 Gmail 내용이 운영자에게 노출되나요?", a: "아니요. 메일은 분류 분석에만 일시 사용되고 즉시 폐기됩니다. 메일 ID + 분류 카테고리만 본인 디렉토리에 기록됩니다." },
-            { q: "답장이 자동으로 보내지나요?", a: "절대 아닙니다. 임시보관함(Drafts)까지만 들어가고, 발송은 본인이 Gmail에서 직접 [보내기] 눌러야 합니다." },
-            { q: "내가 직접 호스팅할 수도 있나요?", a: "네. GitHub에서 코드 받아 본인 서버에 깔 수 있어요. self-host 모드 가이드: docs/SELF_HOST_VS_SAAS.md" },
-          ].map((f, i) => (
-            <FaqItem key={i} {...f} />
-          ))}
+      <section id="faq" className="border-b border-[var(--border)] bg-white py-24">
+        <div className="mx-auto max-w-3xl px-5">
+          <SectionHeader tag="FAQ" title="자주 묻는 질문" />
+          <div className="mt-10 space-y-3">
+            {[
+              { q: "비용이 정말 무료인가요?", a: "네. Groq API 무료 quota (분당 30회 / 일 14,400회) 안에서 동작합니다. 더 큰 사용량이 필요하면 본인 OpenAI/Gemini 키를 /설정에 입력하면 됩니다." },
+              { q: "내 Gmail 내용이 운영자에게 노출되나요?", a: "아니요. 메일 본문은 분석에만 일시 사용되고 즉시 폐기됩니다. 메일 ID + 분류 카테고리만 본인 디렉토리에 기록됩니다." },
+              { q: "답장이 자동으로 보내지나요?", a: "절대 아닙니다. 임시보관함(Drafts)까지만 들어가고, 발송은 본인이 Gmail에서 직접 [보내기] 눌러야 합니다." },
+              { q: "내가 직접 호스팅할 수도 있나요?", a: "네. GitHub에서 코드 받아 본인 서버에 깔 수 있어요. self-host 모드 가이드: docs/SELF_HOST_VS_SAAS.md" },
+            ].map((f, i) => (
+              <FaqItem key={i} {...f} />
+            ))}
+          </div>
         </div>
-      </Section>
+      </section>
 
       {/* === 마지막 CTA === */}
-      <section className="px-5 py-20" style={{ background: "var(--accent)" }}>
+      <section className="bg-[var(--accent)] py-20">
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="mx-auto max-w-2xl text-center"
+          className="mx-auto max-w-3xl px-5 text-center"
         >
-          <div className="text-[64px]">🚀</div>
-          <h2 className="bm-hand mt-3 text-[36px] leading-tight text-white sm:text-[44px]">
-            지금 시작하면<br />
-            오늘 받은 메일부터 정리돼요
+          <h2 className="bm-hand text-[36px] leading-tight text-white sm:text-[44px]">
+            지금 가입하면<br />
+            오늘 받은 메일부터 정리됩니다
           </h2>
-          <p className="mt-5 text-[15px] text-white/70">가입 2분 · Gmail 연결 1분 · 끝.</p>
+          <p className="mt-5 text-[15px] text-white/85">가입 2분 · Gmail 연결 1분 · 끝.</p>
           <Link
             href="/signup"
-            className="mt-8 inline-flex items-center gap-2 rounded-2xl bg-[var(--hot)] px-8 py-4 text-base font-bold text-white shadow-lg transition hover:brightness-105"
+            className="mt-8 inline-flex items-center gap-2 rounded-lg bg-white px-8 py-4 text-base font-bold text-[var(--accent-deep)] shadow-lg transition hover:bg-[var(--background-soft)]"
           >
-            ✨ 무료로 시작하기
+            무료로 시작하기 →
           </Link>
         </motion.div>
       </section>
 
-      {/* === Footer === */}
-      <footer className="border-t border-[var(--border-soft)] bg-[var(--background)] px-5 py-8 text-center text-[12px] text-[var(--foreground-muted)]">
-        <div className="mx-auto max-w-3xl">
-          <p>HI AI LAB · 자동화 에이전트 SaaS</p>
-          <p className="mt-2">
-            <a href="https://github.com/sungpyo9053/hiailab" target="_blank" rel="noopener noreferrer" className="underline">
-              오픈소스
-            </a>
-            {" · "}
-            <a href="https://github.com/sungpyo9053/hiailab/blob/main/docs/SELF_HOST_VS_SAAS.md" target="_blank" rel="noopener noreferrer" className="underline">
-              셀프호스팅 가이드
-            </a>
-          </p>
+      {/* === 푸터 === */}
+      <footer className="border-t border-[var(--border)] bg-[var(--background-soft)] py-12">
+        <div className="mx-auto max-w-6xl px-5">
+          <div className="grid gap-8 sm:grid-cols-4">
+            <div>
+              <div className="text-[16px] font-extrabold">
+                <span className="text-[var(--accent)]">HI AI</span> LAB
+              </div>
+              <p className="mt-2 text-[12px] text-[var(--foreground-muted)]">
+                자동화 에이전트 SaaS.<br />
+                본인 계정 안에서 동작하는 안전한 메일 자동화.
+              </p>
+            </div>
+            <FooterCol
+              title="제품"
+              items={[
+                { label: "에이전트 카탈로그", href: "/" },
+                { label: "동작 원리", href: "#how" },
+                { label: "보안", href: "#safety" },
+                { label: "FAQ", href: "#faq" },
+              ]}
+            />
+            <FooterCol
+              title="개발자"
+              items={[
+                { label: "GitHub", href: "https://github.com/sungpyo9053/hiailab" },
+                { label: "셀프호스팅 가이드", href: "https://github.com/sungpyo9053/hiailab/blob/main/docs/SELF_HOST_VS_SAAS.md" },
+                { label: "API 키 가이드", href: "https://github.com/sungpyo9053/hiailab/blob/main/docs/KEYS.md" },
+                { label: "커스터마이즈", href: "https://github.com/sungpyo9053/hiailab/blob/main/docs/CUSTOMIZE.md" },
+              ]}
+            />
+            <FooterCol
+              title="시작"
+              items={[
+                { label: "무료 가입", href: "/signup" },
+                { label: "로그인", href: "/login" },
+              ]}
+            />
+          </div>
+          <div className="mt-10 border-t border-[var(--border)] pt-6 text-[11px] text-[var(--foreground-muted)]">
+            © 2026 HI AI LAB · 본 서비스는 오픈소스이며 모든 메일은 본인 계정 안에서만 처리됩니다.
+          </div>
         </div>
       </footer>
     </div>
   );
 }
 
-// === 핀 스크롤 시네마틱 Hero ===
-// 컨테이너 높이 = 400vh (4단계)
-// 안의 sticky 박스가 화면에 고정되고, 스크롤 진행률에 따라 4단계 카피가 교차
-function ScrollyHero({ msg }: { msg?: string | null }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: ref,
-    offset: ["start start", "end end"],
-  });
-
-  // 4개 단계 — 각 단계가 약 25% 구간씩
-  const stage1Opacity = useTransform(scrollYProgress, [0.0, 0.18, 0.25], [1, 1, 0]);
-  const stage2Opacity = useTransform(scrollYProgress, [0.18, 0.28, 0.43, 0.52], [0, 1, 1, 0]);
-  const stage3Opacity = useTransform(scrollYProgress, [0.43, 0.55, 0.68, 0.78], [0, 1, 1, 0]);
-  const stage4Opacity = useTransform(scrollYProgress, [0.68, 0.8, 1.0], [0, 1, 1]);
-
-  // 각 단계의 y(슬라이드 업) 효과
-  const stage1Y = useTransform(scrollYProgress, [0, 0.25], [0, -40]);
-  const stage2Y = useTransform(scrollYProgress, [0.18, 0.52], [40, -40]);
-  const stage3Y = useTransform(scrollYProgress, [0.43, 0.78], [40, -40]);
-  const stage4Y = useTransform(scrollYProgress, [0.68, 1.0], [40, 0]);
-
-  // 배경 색상도 스크롤에 따라 변화 (옅은 코랄 → 옅은 골드 → 옅은 회색 → 차콜)
-  const bg = useTransform(
-    scrollYProgress,
-    [0, 0.33, 0.66, 1],
-    ["#FFE9E6", "#FFF5D6", "#F3F3F7", "#2D2A36"]
-  );
-  const textColor = useTransform(
-    scrollYProgress,
-    [0, 0.66, 0.85, 1],
-    ["#2D2A36", "#2D2A36", "#FFFFFF", "#FFFFFF"]
-  );
-
-  // 진행 인디케이터 (우측 점 4개)
-  return (
-    <div ref={ref} className="relative" style={{ height: "400vh" }}>
-      <motion.div
-        style={{ background: bg, color: textColor }}
-        className="sticky top-0 flex h-screen w-full items-center justify-center overflow-hidden"
-      >
-        {/* 4단계 카피 */}
-        <Stage opacity={stage1Opacity} y={stage1Y}>
-          <div className="text-[120px] leading-none sm:text-[160px]">📥</div>
-          <h2 className="bm-hand mt-4 text-[40px] leading-[1.1] tracking-tight sm:text-[60px]">
-            받은편지함이<br />
-            매일같이 <span className="text-[var(--hot)]">쌓이고 있나요?</span>
-          </h2>
-        </Stage>
-
-        <Stage opacity={stage2Opacity} y={stage2Y}>
-          <div className="text-[120px] leading-none sm:text-[160px]">🤖</div>
-          <h2 className="bm-hand mt-4 text-[40px] leading-[1.1] tracking-tight sm:text-[60px]">
-            AI가 알아서<br />
-            <span className="text-[var(--hot)]">답장 초안</span>을 만들어둬요
-          </h2>
-        </Stage>
-
-        <Stage opacity={stage3Opacity} y={stage3Y}>
-          <div className="text-[120px] leading-none sm:text-[160px]">✏️</div>
-          <h2 className="bm-hand mt-4 text-[40px] leading-[1.1] tracking-tight sm:text-[60px]">
-            <span className="text-[var(--hot)]">Gmail 임시보관함</span>에<br />
-            바로 들어있어요
-          </h2>
-          <p className="mt-5 text-[15px] opacity-75 sm:text-[18px]">
-            확인하고 [보내기]만 누르면 끝. <b>자동 발송은 절대 일어나지 않아요.</b>
-          </p>
-        </Stage>
-
-        <Stage opacity={stage4Opacity} y={stage4Y}>
-          <div className="text-[80px] leading-none sm:text-[100px]">🚀</div>
-          <h2 className="bm-hand mt-4 text-[44px] leading-[1.1] tracking-tight sm:text-[64px]">
-            메일 답장,<br />
-            <span style={{ color: "var(--hot)" }}>AI 자판기</span>에서 뽑아 쓰세요
-          </h2>
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
-            <Link href="/signup" className="bm-btn-hot" style={{ padding: "16px 32px", fontSize: 17 }}>
-              ✨ 무료로 시작하기
-            </Link>
-            <Link href="/login" className="bm-btn-secondary" style={{ padding: "15px 24px", fontSize: 15 }}>
-              로그인
-            </Link>
-          </div>
-          <p className="mt-4 text-[12px] opacity-60">
-            카드 등록 없음 · 가입 2분 · 본인 계정 안에서만 동작
-          </p>
-          {msg && <p className="mt-2 text-[12px] text-[var(--warning)]">{msg}</p>}
-        </Stage>
-
-        {/* 우측 진행 인디케이터 (4개 점) */}
-        <ScrollIndicator scrollProgress={scrollYProgress} />
-
-        {/* 첫 화면 안내 — "↓ 스크롤" */}
-        <motion.div
-          style={{ opacity: useTransform(scrollYProgress, [0, 0.08], [1, 0]) }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center text-[12px] opacity-70"
-        >
-          <div>↓</div>
-          <div className="mt-1">스크롤해보세요</div>
-        </motion.div>
-      </motion.div>
-    </div>
-  );
-}
-
-function Stage({
-  opacity,
-  y,
-  children,
+// === 섹션 헤더 ===
+function SectionHeader({
+  tag,
+  title,
+  subtitle,
 }: {
-  opacity: MotionValue<number>;
-  y: MotionValue<number>;
-  children: React.ReactNode;
+  tag: string;
+  title: string;
+  subtitle?: string;
 }) {
   return (
     <motion.div
-      style={{ opacity, y }}
-      className="absolute left-0 right-0 top-1/2 -translate-y-1/2 px-5 text-center"
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-80px" }}
+      transition={{ duration: 0.5 }}
+      className="text-center"
     >
-      {children}
+      <span className="inline-block rounded-full bg-[var(--accent-soft)] px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-[var(--accent-deep)]">
+        {tag}
+      </span>
+      <h2 className="bm-hand mt-4 text-[32px] text-[var(--foreground)] sm:text-[40px]">{title}</h2>
+      {subtitle && (
+        <p className="mt-3 text-[14px] text-[var(--foreground-soft)] sm:text-[15px]">{subtitle}</p>
+      )}
     </motion.div>
-  );
-}
-
-function ScrollIndicator({ scrollProgress }: { scrollProgress: MotionValue<number> }) {
-  const dots = [0.05, 0.35, 0.6, 0.85];
-  return (
-    <div className="absolute right-6 top-1/2 -translate-y-1/2 flex flex-col gap-2">
-      {dots.map((threshold, i) => {
-        const opacity = useTransform(scrollProgress, [threshold - 0.05, threshold], [0.3, 1]);
-        const scale = useTransform(scrollProgress, [threshold - 0.05, threshold], [0.7, 1.2]);
-        return (
-          <motion.div
-            key={i}
-            style={{ opacity, scale }}
-            className="h-2 w-2 rounded-full bg-current"
-          />
-        );
-      })}
-    </div>
-  );
-}
-
-// === 그 외 섹션들 ===
-
-function Section({
-  title,
-  subtitle,
-  children,
-  bg,
-}: {
-  title: string;
-  subtitle?: string;
-  children: React.ReactNode;
-  bg: "white" | "warm" | "soft";
-}) {
-  const bgColor =
-    bg === "white"
-      ? "var(--background-card)"
-      : bg === "warm"
-        ? "var(--warm-soft)"
-        : "var(--background-soft)";
-
-  return (
-    <section className="px-5 py-20" style={{ background: bgColor }}>
-      <div className="mx-auto max-w-4xl">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-50px" }}
-          transition={{ duration: 0.5 }}
-          className="text-center"
-        >
-          <h2 className="bm-hand text-[32px] text-[var(--foreground)] sm:text-[40px]">{title}</h2>
-          {subtitle && (
-            <p className="mt-3 text-[14px] text-[var(--foreground-soft)] sm:text-[16px]">{subtitle}</p>
-          )}
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-50px" }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-        >
-          {children}
-        </motion.div>
-      </div>
-    </section>
   );
 }
 
@@ -316,17 +334,17 @@ function StepCard({
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 40, scale: 0.9 }}
-      whileInView={{ opacity: 1, y: 0, scale: 1 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.55, delay: index * 0.12, ease: [0.16, 1, 0.3, 1] }}
-      className="bm-card relative p-6 text-center"
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.45, delay: index * 0.08 }}
+      className="bm-card relative p-7"
     >
-      <div className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center rounded-full bg-[var(--hot)] text-[11px] font-bold text-white">
-        {index}
-      </div>
-      <div className="text-[56px]">{emoji}</div>
-      <h3 className="bm-hand mt-3 text-[20px] text-[var(--foreground)]">{title}</h3>
+      <span className="absolute right-5 top-5 text-[12px] font-bold text-[var(--foreground-muted)]">
+        0{index}
+      </span>
+      <div className="text-[40px]">{emoji}</div>
+      <h3 className="mt-4 text-[17px] font-bold text-[var(--foreground)]">{title}</h3>
       <p className="mt-2 text-[13px] leading-relaxed text-[var(--foreground-soft)]">{desc}</p>
     </motion.div>
   );
@@ -345,27 +363,28 @@ function AgentPreview({
   available?: boolean;
   index?: number;
 }) {
-  const fromLeft = index % 2 === 0;
   return (
     <motion.div
-      initial={{ opacity: 0, x: fromLeft ? -60 : 60 }}
-      whileInView={{ opacity: 1, x: 0 }}
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.55, delay: (index % 2) * 0.1, ease: [0.16, 1, 0.3, 1] }}
-      className="bm-card flex items-start gap-4 p-5"
+      transition={{ duration: 0.4, delay: index * 0.06 }}
+      className="bm-card p-5"
     >
-      <div className={"text-[40px] " + (available ? "" : "opacity-40")}>{emoji}</div>
-      <div className="flex-1">
-        <div className="flex items-center gap-2">
-          <h3 className="bm-hand text-[18px] text-[var(--foreground)]">{name}</h3>
-          {available ? (
-            <span className="bm-chip-hot">바로 사용</span>
-          ) : (
-            <span className="bm-chip">곧 추가</span>
-          )}
-        </div>
-        <p className="mt-1 text-[12px] leading-relaxed text-[var(--foreground-soft)]">{tagline}</p>
+      <div className="flex items-start justify-between">
+        <div className={"text-[32px] " + (available ? "" : "opacity-40")}>{emoji}</div>
+        {available ? (
+          <span className="rounded-full bg-[var(--accent-soft)] px-2 py-0.5 text-[10px] font-bold text-[var(--accent-deep)]">
+            바로 사용
+          </span>
+        ) : (
+          <span className="rounded-full bg-[var(--background-deep)] px-2 py-0.5 text-[10px] font-bold text-[var(--foreground-muted)]">
+            준비 중
+          </span>
+        )}
       </div>
+      <h3 className="mt-4 text-[15px] font-bold text-[var(--foreground)]">{name}</h3>
+      <p className="mt-1.5 text-[12px] leading-relaxed text-[var(--foreground-soft)]">{tagline}</p>
     </motion.div>
   );
 }
@@ -381,19 +400,18 @@ function PromiseCard({
   desc: string;
   index?: number;
 }) {
-  const fromLeft = index % 2 === 0;
   return (
     <motion.div
-      initial={{ opacity: 0, x: fromLeft ? -60 : 60 }}
-      whileInView={{ opacity: 1, x: 0 }}
+      initial={{ opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
-      transition={{ duration: 0.55, delay: (index % 2) * 0.1, ease: [0.16, 1, 0.3, 1] }}
-      className="bm-card flex gap-4 p-5"
+      transition={{ duration: 0.4, delay: index * 0.06 }}
+      className="bm-card flex gap-4 p-6"
     >
-      <div className="text-[32px]">{emoji}</div>
+      <div className="text-[28px]">{emoji}</div>
       <div>
-        <h3 className="bm-hand text-[18px] text-[var(--foreground)]">{title}</h3>
-        <p className="mt-1 text-[13px] leading-relaxed text-[var(--foreground-soft)]">{desc}</p>
+        <h3 className="text-[15px] font-bold text-[var(--foreground)]">{title}</h3>
+        <p className="mt-1.5 text-[13px] leading-relaxed text-[var(--foreground-soft)]">{desc}</p>
       </div>
     </motion.div>
   );
@@ -410,9 +428,34 @@ function FaqItem({ q, a }: { q: string; a: string }) {
     >
       <summary className="cursor-pointer text-[15px] font-bold text-[var(--foreground)] marker:hidden list-none flex items-center justify-between">
         <span>{q}</span>
-        <span className="text-[var(--foreground-muted)] group-open:rotate-180 transition">▼</span>
+        <span className="text-[var(--foreground-muted)] transition group-open:rotate-180">▼</span>
       </summary>
       <p className="mt-3 text-[13px] leading-relaxed text-[var(--foreground-soft)]">{a}</p>
     </motion.details>
+  );
+}
+
+function FooterCol({
+  title,
+  items,
+}: {
+  title: string;
+  items: { label: string; href: string }[];
+}) {
+  return (
+    <div>
+      <div className="text-[12px] font-extrabold uppercase tracking-wider text-[var(--foreground)]">
+        {title}
+      </div>
+      <ul className="mt-3 space-y-2">
+        {items.map((it, i) => (
+          <li key={i}>
+            <Link href={it.href} className="text-[13px] text-[var(--foreground-soft)] hover:text-[var(--accent-deep)] hover:underline">
+              {it.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
