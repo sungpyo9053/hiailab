@@ -2,7 +2,7 @@
 
 // 클라이언트 전용. lib/* 서버 모듈은 import 하지 않는다.
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type AgentState = {
   enabled: boolean;
@@ -38,13 +38,12 @@ const CATEGORY_LABEL: Record<string, string> = {
   other: "기타",
 };
 
-const CATEGORY_COLOR: Record<string, string> = {
-  needs_reply: "bg-emerald-400/15 text-emerald-300 border-emerald-400/30",
-  newsletter: "bg-blue-400/15 text-blue-300 border-blue-400/30",
-  promotion: "bg-pink-400/15 text-pink-300 border-pink-400/30",
-  notification: "bg-zinc-400/15 text-zinc-300 border-zinc-400/30",
-  spam: "bg-red-400/15 text-red-300 border-red-400/30",
-  other: "bg-white/10 text-white/60 border-white/20",
+const ERROR_LABEL: Record<string, string> = {
+  not_owner:
+    "이 인스턴스는 소유자(OWNER_EMAIL) 이메일로만 연결할 수 있습니다. 다른 Gmail 계정으로 시도하셨네요.",
+  state_mismatch: "보안 토큰 불일치 (다시 시도해 주세요)",
+  missing_code: "OAuth 코드가 누락되었습니다 (다시 시도해 주세요)",
+  token_exchange_failed: "토큰 교환 실패 — Client ID/Secret을 확인하세요",
 };
 
 export default function AgentClient() {
@@ -53,6 +52,7 @@ export default function AgentClient() {
   const [log, setLog] = useState<LogEntry[]>([]);
   const [runningOnce, setRunningOnce] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [showLog, setShowLog] = useState(false);
 
   async function refresh() {
     try {
@@ -74,14 +74,15 @@ export default function AgentClient() {
     return () => clearInterval(t);
   }, []);
 
-  // URL 의 ?connected=1 / ?error=... 처리
+  // URL의 ?connected=1 / ?error=... 처리
   useEffect(() => {
     const q = new URLSearchParams(window.location.search);
     if (q.get("connected")) {
       setMsg("✓ Gmail 연결 완료");
       window.history.replaceState({}, "", window.location.pathname);
     } else if (q.get("error")) {
-      setMsg(`⚠ Gmail 연결 실패: ${q.get("error")}`);
+      const code = q.get("error") || "";
+      setMsg(`⚠ ${ERROR_LABEL[code] ?? code}`);
       window.history.replaceState({}, "", window.location.pathname);
     }
   }, []);
@@ -105,7 +106,7 @@ export default function AgentClient() {
       const data = await r.json();
       setState(data.state);
       await refresh();
-      setMsg("✓ 1회 실행 완료. 아래 로그를 확인하세요.");
+      setMsg("✓ 1회 실행 완료");
     } catch {
       setMsg("⚠ 실행 실패");
     } finally {
@@ -114,112 +115,76 @@ export default function AgentClient() {
   }
 
   async function handleDisconnect() {
-    if (!confirm("Gmail 연결을 해제할까요? 저장된 리프레시 토큰이 삭제됩니다.")) return;
+    if (!confirm("Gmail 연결을 해제할까요?")) return;
     await fetch("/api/gmail/disconnect", { method: "POST" });
     await refresh();
     setMsg("Gmail 연결을 해제했습니다.");
   }
 
+  // 통합 상태: RUNNING / STOPPED
+  const isRunning = useMemo(() => {
+    return Boolean(gmail?.connected && state?.enabled);
+  }, [gmail?.connected, state?.enabled]);
+
+  const replyCount = useMemo(
+    () => log.filter((e) => e.draftId).length,
+    [log]
+  );
+
   // === 렌더 ===
 
   return (
     <>
-      {/* 메시지 배너 */}
       {msg && (
         <div className="mb-4 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80">
           {msg}
         </div>
       )}
 
-      {/* Gmail 연결 카드 */}
-      <section className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+      {/* 큰 상태 카드 — 사용자 요청대로 Running / Stopped 만 명확히 */}
+      <section
+        className={
+          "mb-6 rounded-2xl border p-6 " +
+          (isRunning
+            ? "border-emerald-400/30 bg-emerald-400/[0.06]"
+            : "border-white/10 bg-white/[0.03]")
+        }
+      >
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-base font-semibold">1) Gmail 연결</h2>
-          {gmail?.connected ? (
-            <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-xs text-emerald-300">
-              연결됨
-            </span>
-          ) : (
-            <span className="rounded-full border border-white/20 bg-white/5 px-2 py-0.5 text-xs text-white/50">
-              미연결
-            </span>
-          )}
-        </div>
-
-        {gmail?.connected ? (
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <span className="text-sm text-white/80">📧 {gmail.email}</span>
-            <button
-              onClick={handleDisconnect}
-              className="rounded-lg border border-white/20 px-3 py-1.5 text-xs hover:bg-white/5"
-            >
-              연결 해제
-            </button>
-          </div>
-        ) : (
-          <div className="mt-3 space-y-3">
-            {!gmail?.oauthAppConfigured && (
-              <div className="rounded-lg border border-yellow-400/30 bg-yellow-400/10 p-3 text-xs text-yellow-200">
-                ⚠ 먼저{" "}
-                <a href="/setup" className="underline">
-                  /setup
-                </a>{" "}
-                에서 <b>GOOGLE_OAUTH_CLIENT_ID</b> 와{" "}
-                <b>GOOGLE_OAUTH_CLIENT_SECRET</b> 을 저장하세요.{" "}
-                Google Cloud Console 등록 방법은 <code>docs/SETUP_GMAIL_AUTOMATION.md</code> 참고.
-              </div>
-            )}
-            <a
-              href="/api/gmail/auth"
+          <div className="flex items-center gap-3">
+            <span
               className={
-                "inline-block rounded-lg px-4 py-2 text-sm font-semibold " +
-                (gmail?.oauthAppConfigured
-                  ? "bg-[var(--accent)] text-black"
-                  : "cursor-not-allowed bg-white/10 text-white/40")
+                "inline-block h-3 w-3 rounded-full " +
+                (isRunning ? "bg-emerald-400 animate-pulse" : "bg-white/30")
               }
-            >
-              📨 Gmail 계정 연결하기
-            </a>
+            />
+            <span className="text-3xl font-bold tracking-tight">
+              {isRunning ? "RUNNING" : "STOPPED"}
+            </span>
           </div>
-        )}
-      </section>
+          <div className="text-xs text-white/40">
+            {gmail?.connected
+              ? `📧 ${gmail.email}`
+              : "Gmail 미연결"}
+          </div>
+        </div>
 
-      {/* 자동화 토글 */}
-      <section className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-base font-semibold">2) 자동 폴링</h2>
-          {state?.enabled ? (
-            <span className="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-xs text-emerald-300">
-              ON · {state.intervalSec}초마다 체크
-            </span>
-          ) : (
-            <span className="rounded-full border border-white/20 bg-white/5 px-2 py-0.5 text-xs text-white/50">
-              OFF
-            </span>
-          )}
+        <div className="mt-4 grid grid-cols-2 gap-3 text-sm sm:grid-cols-3">
+          <Stat label="Gmail 연결" value={gmail?.connected ? "연결됨" : "미연결"} ok={!!gmail?.connected} />
+          <Stat
+            label="자동 폴링"
+            value={state?.enabled ? `${state.intervalSec}초 주기` : "OFF"}
+            ok={!!state?.enabled}
+          />
+          <Stat
+            label="누적 초안"
+            value={`${replyCount}건`}
+            ok={replyCount > 0}
+          />
         </div>
-        <p className="mt-2 text-xs text-white/50">
-          ON으로 두면 백그라운드에서 받은편지함 새 메일을 주기적으로 확인하고,
-          답장이 필요한 메일에 대해서만 임시보관함에 초안을 만듭니다.
-        </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button
-            onClick={handleToggle}
-            disabled={!gmail?.connected}
-            className="rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {state?.enabled ? "OFF로 끄기" : "ON으로 켜기"}
-          </button>
-          <button
-            onClick={handleRunOnce}
-            disabled={!gmail?.connected || runningOnce}
-            className="rounded-lg bg-white/90 px-4 py-2 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {runningOnce ? "실행 중…" : "지금 1회 실행"}
-          </button>
-        </div>
+
         {state?.lastRunAt && (
-          <p className="mt-3 text-xs text-white/40">
+          <p className="mt-4 text-xs text-white/50">
             마지막 실행: {new Date(state.lastRunAt).toLocaleString("ko-KR")}
             {state.lastRunSummary && ` — ${state.lastRunSummary}`}
           </p>
@@ -229,60 +194,128 @@ export default function AgentClient() {
         )}
       </section>
 
-      {/* 처리 로그 */}
-      <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-base font-semibold">3) 최근 처리 로그</h2>
-          <span className="text-xs text-white/40">최근 {log.length}건</span>
-        </div>
-        {log.length === 0 ? (
-          <p className="text-xs text-white/40">
-            아직 처리한 메일이 없습니다. 위에서 Gmail을 연결하고 "지금 1회 실행"을 눌러보세요.
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {log.map((e) => (
-              <div
-                key={e.id}
-                className="flex flex-col gap-1 rounded-lg border border-white/10 bg-black/30 p-3"
-              >
-                <div className="flex flex-wrap items-center gap-2">
-                  <span
-                    className={
-                      "rounded-full border px-2 py-0.5 text-[10px] font-semibold " +
-                      (CATEGORY_COLOR[e.category] ?? CATEGORY_COLOR.other)
-                    }
-                  >
-                    {CATEGORY_LABEL[e.category] ?? e.category}
-                  </span>
-                  <span className="text-xs text-white/40">
-                    {new Date(e.processedAt).toLocaleString("ko-KR")}
-                  </span>
-                  {e.draftId && (
-                    <a
-                      href={`https://mail.google.com/mail/u/0/#drafts`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="ml-auto rounded-md border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-xs text-emerald-300 hover:bg-emerald-400/20"
-                    >
-                      ✏️ Gmail 임시보관함에서 보기
-                    </a>
-                  )}
-                  {e.draftError && (
-                    <span className="ml-auto rounded-md border border-red-400/30 bg-red-400/10 px-2 py-0.5 text-xs text-red-300">
-                      초안 실패: {e.draftError}
-                    </span>
-                  )}
-                </div>
-                <div className="truncate text-sm font-medium text-white/90">
-                  {e.subject || "(제목 없음)"}
-                </div>
-                <div className="truncate text-xs text-white/50">{e.from}</div>
-              </div>
-            ))}
+      {/* 조작 영역 — 연결/토글/지금 실행 */}
+      <section className="mb-6 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+        <h2 className="mb-3 text-base font-semibold">조작</h2>
+
+        {!gmail?.oauthAppConfigured && (
+          <div className="mb-3 rounded-lg border border-yellow-400/30 bg-yellow-400/10 p-3 text-xs text-yellow-200">
+            ⚠ 먼저{" "}
+            <a href="/setup" className="underline">
+              /setup
+            </a>{" "}
+            에서 <b>GOOGLE_OAUTH_CLIENT_ID</b> 와{" "}
+            <b>GOOGLE_OAUTH_CLIENT_SECRET</b> 을 저장하세요.{" "}
+            (방법: <code>docs/SETUP_GMAIL_AUTOMATION.md</code>)
           </div>
         )}
+
+        <div className="flex flex-wrap gap-2">
+          {gmail?.connected ? (
+            <button
+              onClick={handleDisconnect}
+              className="rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/5"
+            >
+              Gmail 연결 해제
+            </button>
+          ) : (
+            <a
+              href="/api/gmail/auth"
+              className={
+                "inline-block rounded-lg px-4 py-2 text-sm font-semibold " +
+                (gmail?.oauthAppConfigured
+                  ? "bg-[var(--accent)] text-black"
+                  : "cursor-not-allowed bg-white/10 text-white/40")
+              }
+            >
+              📨 Gmail 연결하기
+            </a>
+          )}
+
+          <button
+            onClick={handleToggle}
+            disabled={!gmail?.connected}
+            className="rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/5 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {state?.enabled ? "자동 폴링 OFF" : "자동 폴링 ON"}
+          </button>
+
+          <button
+            onClick={handleRunOnce}
+            disabled={!gmail?.connected || runningOnce}
+            className="rounded-lg bg-white/90 px-4 py-2 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {runningOnce ? "실행 중…" : "지금 1회 실행"}
+          </button>
+
+          <button
+            onClick={() => setShowLog((v) => !v)}
+            className="ml-auto rounded-lg border border-white/15 px-3 py-2 text-xs text-white/50 hover:bg-white/5"
+          >
+            {showLog ? "처리 로그 숨기기" : "처리 로그 보기"}
+          </button>
+        </div>
       </section>
+
+      {/* 처리 로그 (기본 접힘) */}
+      {showLog && (
+        <section className="rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+          <h2 className="mb-3 text-base font-semibold">최근 처리 로그</h2>
+          {log.length === 0 ? (
+            <p className="text-xs text-white/40">
+              아직 처리한 메일이 없습니다.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {log.map((e) => (
+                <div
+                  key={e.id}
+                  className="flex flex-col gap-1 rounded-lg border border-white/10 bg-black/30 p-3"
+                >
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <span className="rounded-full border border-white/20 bg-white/5 px-2 py-0.5 text-[10px] font-semibold">
+                      {CATEGORY_LABEL[e.category] ?? e.category}
+                    </span>
+                    <span className="text-white/40">
+                      {new Date(e.processedAt).toLocaleString("ko-KR")}
+                    </span>
+                    {e.draftId && (
+                      <a
+                        href="https://mail.google.com/mail/u/0/#drafts"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-auto rounded-md border border-emerald-400/30 bg-emerald-400/10 px-2 py-0.5 text-emerald-300 hover:bg-emerald-400/20"
+                      >
+                        ✏️ 임시보관함에서 보기
+                      </a>
+                    )}
+                    {e.draftError && (
+                      <span className="ml-auto rounded-md border border-red-400/30 bg-red-400/10 px-2 py-0.5 text-red-300">
+                        초안 실패
+                      </span>
+                    )}
+                  </div>
+                  <div className="truncate text-sm text-white/90">
+                    {e.subject || "(제목 없음)"}
+                  </div>
+                  <div className="truncate text-xs text-white/50">{e.from}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
     </>
+  );
+}
+
+function Stat({ label, value, ok }: { label: string; value: string; ok: boolean }) {
+  return (
+    <div className="rounded-lg border border-white/10 bg-black/30 px-3 py-2">
+      <div className="text-[10px] uppercase tracking-wider text-white/40">{label}</div>
+      <div className={"mt-1 text-sm font-semibold " + (ok ? "text-emerald-300" : "text-white/70")}>
+        {value}
+      </div>
+    </div>
   );
 }

@@ -29,5 +29,17 @@ export async function GET(req: NextRequest) {
   if (!tokens) {
     return NextResponse.redirect(`${appUrl}/agent?error=token_exchange_failed`);
   }
+
+  // OWNER_EMAIL 이 설정되어 있으면, 그 이메일로 로그인한 경우만 허용.
+  // 다른 이메일로 OAuth 통과한 경우 즉시 연결 해제 + 안내.
+  const owner = (process.env.OWNER_EMAIL || "").trim().toLowerCase();
+  if (owner && tokens.email && tokens.email.toLowerCase() !== owner) {
+    const { disconnectGmail } = await import("@/lib/gmail");
+    await disconnectGmail();
+    return NextResponse.redirect(
+      `${appUrl}/agent?error=${encodeURIComponent("not_owner")}`
+    );
+  }
+
   return NextResponse.redirect(`${appUrl}/agent?connected=1`);
 }

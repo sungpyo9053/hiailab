@@ -6,6 +6,18 @@
 
 > 🎬 **유튜브 가이드 영상**: _(영상 업로드 후 링크 교체)_
 
+## 🟢 운영 인스턴스 상태
+
+| | |
+| --- | --- |
+| **호스트** | AWS Lightsail (Seoul, `ap-northeast-2a`) · `3.34.133.24` |
+| **소유자 전용** | `OWNER_EMAIL` 설정됨 — 소유자 Gmail 외 OAuth 거부 |
+| **상태 페이지** | `/agent` — RUNNING / STOPPED 한 줄로 표시 |
+| **공개 URL** | _(배포 도메인 확정 후 채워주세요. 예: `https://hi.example.com`)_ |
+| **버전** | v0.2 — Gmail 자동 답장 + 임시보관함 초안 생성 |
+
+> 이 인스턴스는 **단일 소유자(형)만** 사용 가능합니다. 다른 사람이 OAuth 시도하면 즉시 거절되고 연결 해제됩니다.
+
 > ⚠️ **현재 버전은 "붙여넣기 기반 AI 자판기"입니다.** Gmail 받은편지함을 자동으로 읽고 임시보관함에 답장 초안을 만드는 기능은 다음 단계에서 추가됩니다. 자세한 범위는 아래 "[지금 되는 것 / 아직 안 되는 것](#-지금-되는-것--아직-안-되는-것)" 표를 보세요.
 
 ---
@@ -192,6 +204,136 @@ HI AI LAB의 메인 기능은 **메일 답장 에이전트**입니다.
 - 스크린샷에 키가 보이게 캡처하지 마세요.
 
 유출되면 즉시 OpenAI/Gmail/카카오에서 해당 키를 **폐기 후 재발급**하세요.
+
+---
+
+---
+
+## 🚀 운영 서버에 배포하기 (AWS Lightsail / 본인 도커 서버)
+
+> 이미 다른 서비스가 도는 서버에 **별도 서브도메인으로** 올린다고 가정한 가이드입니다.
+
+### 0. 사전 준비
+- 서버에 SSH 접속 가능
+- Docker + docker compose 설치돼 있음 (`docker --version`, `docker compose version` 확인)
+- 본인 도메인에 서브도메인 A 레코드 추가 (예: `hi.example.com → 3.34.133.24`)
+- AWS Lightsail 방화벽에 HTTP(80) / HTTPS(443) 포트 인바운드 허용
+
+### 1. SSH 접속 후 코드 받기
+
+```bash
+cd ~ && git clone https://github.com/sungpyo9053/hiailab.git
+cd hiailab
+```
+
+### 2. `.env.local` 만들기
+
+```bash
+cp .env.local.example .env.local
+nano .env.local        # 또는 vim
+```
+
+최소 다음 7줄을 채웁니다.
+
+```env
+# 다른 서비스가 3000을 쓰고 있으면 3100/3200 등으로
+HOST_PORT=3100
+
+# AES-256-GCM 자물쇠 키. openssl rand -base64 32 로 생성한 값
+APP_ENCRYPTION_KEY=...
+
+# 본인 OpenAI API Key
+OPENAI_API_KEY=sk-...
+
+# 본인 Gmail 이메일 — 이 외 다른 Gmail은 OAuth 차단
+OWNER_EMAIL=mygmail@gmail.com
+
+# 공개 URL (Google OAuth redirect 계산 기준)
+NEXT_PUBLIC_APP_URL=https://hi.example.com
+
+# Gmail OAuth 앱 (docs/SETUP_GMAIL_AUTOMATION.md 따라 발급)
+GOOGLE_OAUTH_CLIENT_ID=...
+GOOGLE_OAUTH_CLIENT_SECRET=...
+```
+
+저장: nano → `Ctrl+O` Enter → `Ctrl+X`
+
+### 3. Docker 빌드 + 실행
+
+```bash
+docker compose up -d --build
+docker compose logs -f --tail=50    # Ready in ... 보이면 OK, Ctrl+C로 빠져나감
+```
+
+### 4. 기존 nginx 에 서브도메인 추가 (또는 Caddy)
+
+**nginx 사용 시** — `/etc/nginx/sites-available/hi.conf`:
+
+```nginx
+server {
+    listen 80;
+    server_name hi.example.com;
+
+    location / {
+        proxy_pass http://127.0.0.1:3100;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+활성화 + HTTPS (Let's Encrypt 무료 인증서):
+
+```bash
+sudo ln -sf /etc/nginx/sites-available/hi.conf /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d hi.example.com    # 처음이면 sudo apt install certbot python3-certbot-nginx
+```
+
+**Caddy 쓰면 더 간단** — `/etc/caddy/Caddyfile` 에 한 블록 추가:
+
+```
+hi.example.com {
+    reverse_proxy localhost:3100
+}
+```
+→ `sudo systemctl reload caddy`. HTTPS 자동.
+
+### 5. Google OAuth redirect URI 추가
+
+Google Cloud Console → **API 및 서비스 → 사용자 인증 정보 → OAuth 클라이언트 ID** 클릭 →
+**승인된 리디렉션 URI**에 다음 추가:
+
+```
+https://hi.example.com/api/gmail/callback
+```
+
+저장.
+
+### 6. 운영 확인
+
+브라우저에서:
+- `https://hi.example.com` → 메인 페이지 표시
+- `https://hi.example.com/agent` → 큰 상태 카드에 **STOPPED** (Gmail 미연결)
+- **"📨 Gmail 연결하기"** → 본인 Gmail로 로그인 → 동의 → `RUNNING` 으로 바뀌면 성공
+
+소유자가 아닌 다른 Gmail로 로그인하면:
+> ⚠ 이 인스턴스는 소유자(OWNER_EMAIL) 이메일로만 연결할 수 있습니다.
+
+라는 메시지와 함께 즉시 연결 해제.
+
+### 7. 운영 점검 명령어
+
+```bash
+docker compose ps                          # 컨테이너 떠 있는지
+docker compose logs -f --tail=100           # 실시간 로그
+docker compose restart                      # 환경변수 바꾼 뒤
+docker compose down                         # 중지
+docker compose up -d --build                # 코드 업데이트 후 재배포
+git pull && docker compose up -d --build    # 위 두 줄 합본
+```
 
 ---
 
