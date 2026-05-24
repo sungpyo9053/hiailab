@@ -1,10 +1,19 @@
 import { NextResponse } from "next/server";
-import { triggerAgentRun, getAgentState } from "@/lib/agent-loop";
+import { getAgentState, triggerAgentRun } from "@/lib/agent-loop";
+import { HttpError, requireUser } from "@/lib/current-user";
 
 export const runtime = "nodejs";
 
 export async function POST() {
-  await triggerAgentRun();
-  const state = await getAgentState();
-  return NextResponse.json({ ok: true, state });
+  try {
+    const user = await requireUser();
+    await triggerAgentRun(user.id);
+    const state = await getAgentState(user.id);
+    return NextResponse.json({ ok: true, state });
+  } catch (e) {
+    if (e instanceof HttpError) {
+      return NextResponse.json({ ok: false, error: e.message }, { status: e.status });
+    }
+    throw e;
+  }
 }

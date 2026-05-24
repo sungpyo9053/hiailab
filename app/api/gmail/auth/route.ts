@@ -5,6 +5,7 @@ import { buildAuthorizeUrl } from "@/lib/gmail";
 
 export const runtime = "nodejs";
 
+// 인증 없이 호출 가능 — saas 모드의 "로그인 시작" 엔드포인트이기도 함.
 export async function GET() {
   const url = await buildAuthorizeUrl(randomBytes(16).toString("hex"));
   if (!url) {
@@ -12,12 +13,11 @@ export async function GET() {
       {
         ok: false,
         error:
-          "Google OAuth 앱이 설정되지 않았습니다. /setup에서 GOOGLE_OAUTH_CLIENT_ID/SECRET을 먼저 저장하세요.",
+          "Google OAuth 앱이 설정되지 않았습니다. (관리자가 /setup 에서 GOOGLE_OAUTH_CLIENT_ID/SECRET 저장 필요)",
       },
       { status: 400 }
     );
   }
-  // state 검증을 위해 cookie 저장
   const state = new URL(url).searchParams.get("state")!;
   const jar = await cookies();
   jar.set("hiailab_oauth_state", state, {

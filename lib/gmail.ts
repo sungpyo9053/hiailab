@@ -1,12 +1,9 @@
 import "server-only";
-import { loadStoredConfig, saveStoredConfig } from "./config-store";
-
-// Gmail OAuth + API 래퍼.
-// 의존성 최소화를 위해 googleapis 패키지 대신 fetch 직접 사용.
+import { loadGlobalConfig, loadUserConfig, saveUserConfig } from "./config-store";
 
 export const GMAIL_SCOPES = [
   "https://www.googleapis.com/auth/gmail.readonly",
-  "https://www.googleapis.com/auth/gmail.compose", // drafts.create 가능
+  "https://www.googleapis.com/auth/gmail.compose",
   "https://www.googleapis.com/auth/userinfo.email",
 ].join(" ");
 
@@ -15,40 +12,7 @@ const AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth";
 const GMAIL_API = "https://gmail.googleapis.com/gmail/v1/users/me";
 const USERINFO_API = "https://www.googleapis.com/oauth2/v2/userinfo";
 
-export type GmailCreds = {
-  clientId: string;
-  clientSecret: string;
-  refreshToken: string;
-};
-
-async function readCreds(): Promise<GmailCreds | null> {
-  const env = process.env;
-  if (
-    env.GOOGLE_OAUTH_CLIENT_ID &&
-    env.GOOGLE_OAUTH_CLIENT_SECRET &&
-    env.GMAIL_REFRESH_TOKEN
-  ) {
-    return {
-      clientId: env.GOOGLE_OAUTH_CLIENT_ID,
-      clientSecret: env.GOOGLE_OAUTH_CLIENT_SECRET,
-      refreshToken: env.GMAIL_REFRESH_TOKEN,
-    };
-  }
-  const stored = await loadStoredConfig();
-  if (
-    stored.GOOGLE_OAUTH_CLIENT_ID &&
-    stored.GOOGLE_OAUTH_CLIENT_SECRET &&
-    stored.GMAIL_REFRESH_TOKEN
-  ) {
-    return {
-      clientId: stored.GOOGLE_OAUTH_CLIENT_ID,
-      clientSecret: stored.GOOGLE_OAUTH_CLIENT_SECRET,
-      refreshToken: stored.GMAIL_REFRESH_TOKEN,
-    };
-  }
-  return null;
-}
-
+// === OAuth 앱 정보 (global — admin 이 한 번 설정) ===
 async function readOAuthApp(): Promise<{ clientId: string; clientSecret: string } | null> {
   const env = process.env;
   if (env.GOOGLE_OAUTH_CLIENT_ID && env.GOOGLE_OAUTH_CLIENT_SECRET) {
@@ -57,14 +21,33 @@ async function readOAuthApp(): Promise<{ clientId: string; clientSecret: string 
       clientSecret: env.GOOGLE_OAUTH_CLIENT_SECRET,
     };
   }
-  const stored = await loadStoredConfig();
-  if (stored.GOOGLE_OAUTH_CLIENT_ID && stored.GOOGLE_OAUTH_CLIENT_SECRET) {
+  const g = await loadGlobalConfig();
+  if (g.GOOGLE_OAUTH_CLIENT_ID && g.GOOGLE_OAUTH_CLIENT_SECRET) {
     return {
-      clientId: stored.GOOGLE_OAUTH_CLIENT_ID,
-      clientSecret: stored.GOOGLE_OAUTH_CLIENT_SECRET,
+      clientId: g.GOOGLE_OAUTH_CLIENT_ID,
+      clientSecret: g.GOOGLE_OAUTH_CLIENT_SECRET,
     };
   }
   return null;
+}
+
+// === 사용자 refresh token (user-scoped) ===
+async function readUserCreds(
+  userId: string
+): Promise<{ clientId: string; clientSecret: string; refreshToken: string } | null> {
+  const app = await readOAuthApp();
+  if (!app) return null;
+  // refresh token 은 우선 env (단일 self 케이스), 그다음 user config
+  const env = process.env;
+  let refreshToken: string | undefined;
+  if (userId === "_self" && env.GMAIL_REFRESH_TOKEN) {
+    refreshToken = env.GMAIL_REFRESH_TOKEN;
+  } else {
+    const u = await loadUserConfig(userId);
+    refreshToken = u.GMAIL_REFRESH_TOKEN;
+  }
+  if (!refreshToken) return null;
+  return { ...app, refreshToken };
 }
 
 export function buildRedirectUri(): string {
@@ -87,7 +70,12 @@ export async function buildAuthorizeUrl(state: string): Promise<string | null> {
   return `${AUTH_ENDPOINT}?${params.toString()}`;
 }
 
-export async function exchangeCodeForTokens(code: string): Promise<{
+// OAuth 콜백에서 호출 — code → tokens → user 의 refresh_token 저장.
+// userId 가 null 이면 응답의 email 로 결정 (saas 로그인 흐름).
+export async function exchangeCodeForTokens(
+  code: string,
+  userIdHint: string | null
+): Promise<{
   refresh_token: string;
   access_token: string;
   expires_in: number;
@@ -108,19 +96,16 @@ export async function exchangeCodeForTokens(code: string): Promise<{
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
     body: form.toString(),
   });
-  if (!resp.ok) {
-    return null;
-  }
+  if (!resp.ok) return null;
+
   const data = (await resp.json()) as {
     access_token?: string;
     refresh_token?: string;
     expires_in?: number;
   };
-  if (!data.access_token || !data.refresh_token) {
-    return null;
-  }
+  if (!data.access_token || !data.refresh_token) return null;
 
-  // 사용자 이메일 조회
+  // userinfo 조회
   const userInfo = await fetch(USERINFO_API, {
     headers: { Authorization: `Bearer ${data.access_token}` },
   });
@@ -130,8 +115,10 @@ export async function exchangeCodeForTokens(code: string): Promise<{
     email = u.email ?? "";
   }
 
-  // refresh_token + email 을 저장 (access_token 은 매번 갱신)
-  await saveStoredConfig({
+  // 저장할 userId 결정 (saas: email, self: _self)
+  const targetUserId = userIdHint ?? (email ? email.toLowerCase() : "_self");
+
+  await saveUserConfig(targetUserId, {
     updates: {
       GMAIL_REFRESH_TOKEN: data.refresh_token,
       GMAIL_EMAIL: email,
@@ -146,15 +133,15 @@ export async function exchangeCodeForTokens(code: string): Promise<{
   };
 }
 
-// 액세스 토큰 캐시 (메모리). 만료 30초 전부터 재발급.
-let cachedAccessToken: { value: string; expiresAt: number } | null = null;
+// 사용자별 access token 캐시 (메모리)
+const tokenCache = new Map<string, { value: string; expiresAt: number }>();
 
-async function getAccessToken(): Promise<string | null> {
+async function getAccessToken(userId: string): Promise<string | null> {
   const now = Date.now();
-  if (cachedAccessToken && cachedAccessToken.expiresAt > now + 30_000) {
-    return cachedAccessToken.value;
-  }
-  const creds = await readCreds();
+  const cached = tokenCache.get(userId);
+  if (cached && cached.expiresAt > now + 30_000) return cached.value;
+
+  const creds = await readUserCreds(userId);
   if (!creds) return null;
 
   const form = new URLSearchParams({
@@ -169,47 +156,37 @@ async function getAccessToken(): Promise<string | null> {
     body: form.toString(),
   });
   if (!resp.ok) {
-    console.error("[gmail] 액세스 토큰 갱신 실패", { status: resp.status });
+    console.error("[gmail] 액세스 토큰 갱신 실패", { status: resp.status, userId });
     return null;
   }
-  const data = (await resp.json()) as {
-    access_token?: string;
-    expires_in?: number;
-  };
+  const data = (await resp.json()) as { access_token?: string; expires_in?: number };
   if (!data.access_token) return null;
-  cachedAccessToken = {
+  tokenCache.set(userId, {
     value: data.access_token,
     expiresAt: now + (data.expires_in ?? 3600) * 1000,
-  };
-  return cachedAccessToken.value;
-}
-
-export async function isGmailConnected(): Promise<boolean> {
-  const creds = await readCreds();
-  return Boolean(creds);
-}
-
-export async function disconnectGmail(): Promise<void> {
-  await saveStoredConfig({
-    remove: ["GMAIL_REFRESH_TOKEN", "GMAIL_EMAIL"],
   });
-  cachedAccessToken = null;
+  return data.access_token;
 }
 
-export async function getConnectedEmail(): Promise<string | null> {
-  const env = process.env.GMAIL_EMAIL;
-  if (env) return env;
-  const stored = await loadStoredConfig();
-  return stored.GMAIL_EMAIL ?? null;
+export async function isGmailConnected(userId: string): Promise<boolean> {
+  return (await readUserCreds(userId)) !== null;
 }
 
-// === Gmail API 호출 ===
+export async function disconnectGmail(userId: string): Promise<void> {
+  const { saveUserConfig } = await import("./config-store");
+  await saveUserConfig(userId, { remove: ["GMAIL_REFRESH_TOKEN", "GMAIL_EMAIL"] });
+  tokenCache.delete(userId);
+}
 
-export type GmailMessageSummary = {
-  id: string;
-  threadId: string;
-};
+export async function getConnectedEmail(userId: string): Promise<string | null> {
+  if (userId === "_self" && process.env.GMAIL_EMAIL) return process.env.GMAIL_EMAIL;
+  const u = await loadUserConfig(userId);
+  return u.GMAIL_EMAIL ?? null;
+}
 
+// === Gmail API ===
+
+export type GmailMessageSummary = { id: string; threadId: string };
 export type GmailMessage = {
   id: string;
   threadId: string;
@@ -219,66 +196,34 @@ export type GmailMessage = {
   date: string;
   snippet: string;
   body: string;
-  messageIdHeader: string; // RFC822 Message-ID (스레드 답장에 필요)
+  messageIdHeader: string;
 };
 
-async function gmailFetch(path: string, init?: RequestInit): Promise<Response | null> {
-  const token = await getAccessToken();
+async function gmailFetch(userId: string, p: string, init?: RequestInit): Promise<Response | null> {
+  const token = await getAccessToken(userId);
   if (!token) return null;
-  const url = path.startsWith("http") ? path : `${GMAIL_API}${path}`;
+  const url = p.startsWith("http") ? p : `${GMAIL_API}${p}`;
   return fetch(url, {
     ...init,
-    headers: {
-      ...(init?.headers ?? {}),
-      Authorization: `Bearer ${token}`,
-    },
+    headers: { ...(init?.headers ?? {}), Authorization: `Bearer ${token}` },
   });
 }
 
-// 새 받은편지함 메일 ID 목록 (읽음 처리 X, 받은편지함 + 미답장 + 최근 1일 등 q 옵션)
 export async function listRecentInboxMessageIds(
+  userId: string,
   query: string = "in:inbox newer_than:1d"
 ): Promise<GmailMessageSummary[]> {
   const params = new URLSearchParams({ q: query, maxResults: "25" });
-  const resp = await gmailFetch(`/messages?${params.toString()}`);
+  const resp = await gmailFetch(userId, `/messages?${params.toString()}`);
   if (!resp || !resp.ok) return [];
-  const data = (await resp.json()) as {
-    messages?: { id: string; threadId: string }[];
-  };
+  const data = (await resp.json()) as { messages?: { id: string; threadId: string }[] };
   return data.messages ?? [];
 }
 
 function decodeBase64Url(s: string): string {
-  // base64url → base64 → 문자열
   const b64 = s.replace(/-/g, "+").replace(/_/g, "/");
   const pad = b64.length % 4 ? 4 - (b64.length % 4) : 0;
   return Buffer.from(b64 + "=".repeat(pad), "base64").toString("utf8");
-}
-
-function extractTextBody(payload: GmailPayload): string {
-  if (!payload) return "";
-  // 단일 part
-  if (payload.body?.data && payload.mimeType?.startsWith("text/plain")) {
-    return decodeBase64Url(payload.body.data);
-  }
-  // multipart
-  if (payload.parts) {
-    // text/plain 우선
-    const plain = payload.parts.find((p) => p.mimeType === "text/plain");
-    if (plain?.body?.data) return decodeBase64Url(plain.body.data);
-    // text/html fallback (HTML 태그 제거 간단)
-    const html = payload.parts.find((p) => p.mimeType === "text/html");
-    if (html?.body?.data) {
-      const raw = decodeBase64Url(html.body.data);
-      return raw.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-    }
-    // 재귀
-    for (const p of payload.parts) {
-      const t = extractTextBody(p as GmailPayload);
-      if (t) return t;
-    }
-  }
-  return "";
 }
 
 type GmailPayload = {
@@ -288,9 +233,29 @@ type GmailPayload = {
   parts?: GmailPayload[];
 };
 
-export async function getMessage(id: string): Promise<GmailMessage | null> {
-  // metadata 만으로는 본문이 없어서 format=full 사용
-  const resp = await gmailFetch(`/messages/${id}?format=full`);
+function extractTextBody(payload: GmailPayload): string {
+  if (!payload) return "";
+  if (payload.body?.data && payload.mimeType?.startsWith("text/plain")) {
+    return decodeBase64Url(payload.body.data);
+  }
+  if (payload.parts) {
+    const plain = payload.parts.find((p) => p.mimeType === "text/plain");
+    if (plain?.body?.data) return decodeBase64Url(plain.body.data);
+    const html = payload.parts.find((p) => p.mimeType === "text/html");
+    if (html?.body?.data) {
+      const raw = decodeBase64Url(html.body.data);
+      return raw.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    }
+    for (const p of payload.parts) {
+      const t = extractTextBody(p as GmailPayload);
+      if (t) return t;
+    }
+  }
+  return "";
+}
+
+export async function getMessage(userId: string, id: string): Promise<GmailMessage | null> {
+  const resp = await gmailFetch(userId, `/messages/${id}?format=full`);
   if (!resp || !resp.ok) return null;
   const data = (await resp.json()) as {
     id: string;
@@ -299,77 +264,29 @@ export async function getMessage(id: string): Promise<GmailMessage | null> {
     payload?: GmailPayload;
   };
   const headers = data.payload?.headers ?? [];
-  const findHeader = (name: string) =>
-    headers.find((h) => h.name.toLowerCase() === name.toLowerCase())?.value ?? "";
+  const find = (n: string) =>
+    headers.find((h) => h.name.toLowerCase() === n.toLowerCase())?.value ?? "";
 
   const body = extractTextBody(data.payload ?? {});
-
   return {
     id: data.id,
     threadId: data.threadId,
-    from: findHeader("From"),
-    to: findHeader("To"),
-    subject: findHeader("Subject"),
-    date: findHeader("Date"),
+    from: find("From"),
+    to: find("To"),
+    subject: find("Subject"),
+    date: find("Date"),
     snippet: data.snippet ?? "",
     body,
-    messageIdHeader: findHeader("Message-ID"),
+    messageIdHeader: find("Message-ID"),
   };
 }
 
-// 답장 초안을 임시보관함에 생성. 자동 발송 X.
-export async function createReplyDraft(opts: {
-  to: string;
-  subject: string;
-  body: string;
-  threadId: string;
-  inReplyToMessageId?: string;
-}): Promise<{ ok: boolean; draftId?: string; error?: string }> {
-  const rfc822 = buildRfc822({
-    to: opts.to,
-    subject: opts.subject,
-    body: opts.body,
-    inReplyTo: opts.inReplyToMessageId,
-  });
-
-  // RFC822 → base64url
-  const raw = Buffer.from(rfc822, "utf8")
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=+$/, "");
-
-  const resp = await gmailFetch("/drafts", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      message: {
-        raw,
-        threadId: opts.threadId,
-      },
-    }),
-  });
-  if (!resp) return { ok: false, error: "Gmail 미연결" };
-  if (!resp.ok) {
-    return { ok: false, error: `Gmail Drafts API 실패 (status ${resp.status})` };
-  }
-  const data = (await resp.json()) as { id?: string };
-  return { ok: true, draftId: data.id };
-}
-
-// 한글이 들어간 헤더 값을 RFC2047 B-인코딩.
 function rfc2047(value: string): string {
-  // ASCII 만이면 그대로 (효율).
   if (/^[\x20-\x7E]*$/.test(value)) return value;
   return `=?UTF-8?B?${Buffer.from(value, "utf8").toString("base64")}?=`;
 }
 
-function buildRfc822(opts: {
-  to: string;
-  subject: string;
-  body: string;
-  inReplyTo?: string;
-}): string {
+function buildRfc822(opts: { to: string; subject: string; body: string; inReplyTo?: string }): string {
   const lines: string[] = [];
   lines.push(`To: ${rfc2047(opts.to)}`);
   lines.push(`Subject: ${rfc2047(opts.subject)}`);
@@ -383,4 +300,31 @@ function buildRfc822(opts: {
   lines.push("");
   lines.push(opts.body);
   return lines.join("\r\n");
+}
+
+export async function createReplyDraft(
+  userId: string,
+  opts: { to: string; subject: string; body: string; threadId: string; inReplyToMessageId?: string }
+): Promise<{ ok: boolean; draftId?: string; error?: string }> {
+  const rfc822 = buildRfc822({
+    to: opts.to,
+    subject: opts.subject,
+    body: opts.body,
+    inReplyTo: opts.inReplyToMessageId,
+  });
+  const raw = Buffer.from(rfc822, "utf8")
+    .toString("base64")
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
+
+  const resp = await gmailFetch(userId, "/drafts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message: { raw, threadId: opts.threadId } }),
+  });
+  if (!resp) return { ok: false, error: "Gmail 미연결" };
+  if (!resp.ok) return { ok: false, error: `Gmail Drafts API 실패 (status ${resp.status})` };
+  const data = (await resp.json()) as { id?: string };
+  return { ok: true, draftId: data.id };
 }

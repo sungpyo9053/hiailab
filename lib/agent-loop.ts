@@ -2,14 +2,13 @@ import "server-only";
 import { promises as fs } from "node:fs";
 import path from "node:path";
 import { runAgentOnce } from "./agent";
+import { listAllUserIds } from "./user-paths";
+import { isSaaS } from "./mode";
+import { ensureUserStoreDir, getUserStoreDir } from "./user-paths";
 
-// 백그라운드 폴링 루프.
-// Next.js 단일 프로세스에서 setInterval 로 구동. 토글 상태는 .hiailab/agent-state.json 에 저장.
+// 사용자별 agent state.
 
-const STORE_DIR = path.join(process.cwd(), ".hiailab");
-const STATE_FILE = path.join(STORE_DIR, "agent-state.json");
-
-type AgentState = {
+export type AgentState = {
   enabled: boolean;
   intervalSec: number;
   lastRunAt: string | null;
@@ -25,48 +24,50 @@ const DEFAULT_STATE: AgentState = {
   lastError: null,
 };
 
-async function readState(): Promise<AgentState> {
+function statePath(userId: string): string {
+  return path.join(getUserStoreDir(userId), "agent-state.json");
+}
+
+async function readState(userId: string): Promise<AgentState> {
   try {
-    const buf = await fs.readFile(STATE_FILE, "utf8");
-    const data = JSON.parse(buf) as AgentState;
-    return { ...DEFAULT_STATE, ...data };
+    const buf = await fs.readFile(statePath(userId), "utf8");
+    return { ...DEFAULT_STATE, ...(JSON.parse(buf) as AgentState) };
   } catch {
     return { ...DEFAULT_STATE };
   }
 }
 
-async function writeState(s: AgentState): Promise<void> {
-  await fs.mkdir(STORE_DIR, { recursive: true });
-  await fs.writeFile(STATE_FILE, JSON.stringify(s, null, 2), {
+async function writeState(userId: string, s: AgentState): Promise<void> {
+  await ensureUserStoreDir(userId);
+  await fs.writeFile(statePath(userId), JSON.stringify(s, null, 2), {
     encoding: "utf8",
     mode: 0o600,
   });
 }
 
-export async function getAgentState(): Promise<AgentState> {
-  return readState();
+export async function getAgentState(userId: string): Promise<AgentState> {
+  return readState(userId);
 }
 
-export async function setAgentEnabled(enabled: boolean): Promise<AgentState> {
-  const s = await readState();
+export async function setAgentEnabled(userId: string, enabled: boolean): Promise<AgentState> {
+  const s = await readState(userId);
   s.enabled = enabled;
-  await writeState(s);
+  await writeState(userId, s);
   ensureLoopRunning();
   return s;
 }
 
-export async function setAgentIntervalSec(sec: number): Promise<AgentState> {
-  const s = await readState();
+export async function setAgentIntervalSec(userId: string, sec: number): Promise<AgentState> {
+  const s = await readState(userId);
   s.intervalSec = Math.max(60, Math.floor(sec));
-  await writeState(s);
+  await writeState(userId, s);
   return s;
 }
 
-// 한 번 폴링 (UI 의 "지금 실행" 버튼에서도 호출)
-export async function triggerAgentRun(): Promise<void> {
-  const s = await readState();
+export async function triggerAgentRun(userId: string): Promise<void> {
+  const s = await readState(userId);
   try {
-    const r = await runAgentOnce();
+    const r = await runAgentOnce(userId);
     s.lastRunAt = new Date().toISOString();
     s.lastError = r.ok ? null : r.error ?? "알 수 없는 오류";
     s.lastRunSummary = r.ok
@@ -77,10 +78,10 @@ export async function triggerAgentRun(): Promise<void> {
     s.lastError = (err as Error).message;
     s.lastRunSummary = "예외 발생";
   }
-  await writeState(s);
+  await writeState(userId, s);
 }
 
-// 모듈 스코프에 단일 인터벌 핸들 유지 (HMR 에서도 중복 방지)
+// === 백그라운드 폴링 ===
 declare global {
   // eslint-disable-next-line no-var
   var __hiailabAgentTimer: NodeJS.Timeout | undefined;
@@ -100,13 +101,20 @@ export function ensureLoopRunning(): void {
 
   global.__hiailabAgentTimer = setInterval(async () => {
     if (global.__hiailabAgentBusy) return;
-    const s = await readState();
-    if (!s.enabled) return;
     global.__hiailabAgentBusy = true;
     try {
-      await triggerAgentRun();
+      const users = isSaaS() ? await listAllUserIds() : ["_self"];
+      for (const userId of users) {
+        const s = await readState(userId);
+        if (!s.enabled) continue;
+        try {
+          await triggerAgentRun(userId);
+        } catch (err) {
+          console.error("[agent-loop] user run 실패", { userId, message: (err as Error).message });
+        }
+      }
     } finally {
       global.__hiailabAgentBusy = false;
     }
-  }, 30_000); // 30초마다 state 확인 + 마지막 실행 이후 intervalSec 지났을 때만 실행하는 게 정확하지만 v1 은 단순화
+  }, 30_000);
 }

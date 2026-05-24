@@ -15,12 +15,6 @@ import {
   type ProcessedEntry,
 } from "./processed-store";
 
-// 자동화 메인 로직.
-// 1) 받은편지함의 최근 새 메일 목록을 가져온다 (읽음 처리 X)
-// 2) 이미 본 ID 는 스킵
-// 3) AI 가 분류해서 needs_reply 인 경우만 답장 초안을 만든다
-// 4) Gmail 임시보관함(Drafts) 에 저장 — 자동 발송 절대 X
-
 const REPLY_SYSTEM_PROMPT = [
   "당신은 한국 비즈니스 이메일 답장 초안 작성 비서다.",
   "받은 메일을 보고, 사람이 검토 후 발송할 수 있는 답장 초안을 작성한다.",
@@ -56,18 +50,15 @@ async function generateReplyBody(mail: {
   });
 }
 
-// 발신자 헤더에서 이메일 주소만 추출. "이름 <user@example.com>" → "user@example.com"
 function extractEmailAddress(s: string): string {
   const m = s.match(/<([^>]+)>/);
   if (m) return m[1].trim();
   return s.trim();
 }
 
-// 자기 자신이 보낸 메일/자기 도메인은 스킵
 function shouldSkipBySender(fromAddress: string, ownEmail: string | null): boolean {
   if (!fromAddress) return true;
   if (ownEmail && fromAddress.toLowerCase() === ownEmail.toLowerCase()) return true;
-  // noreply/no-reply/donotreply 패턴
   if (/no[-_]?reply|donotreply|do-not-reply/i.test(fromAddress)) return true;
   return false;
 }
@@ -78,13 +69,13 @@ export type AgentRunResult = {
   scanned: number;
   skippedSeen: number;
   skippedSender: number;
-  classified: Record<string, number>; // category → count
+  classified: Record<string, number>;
   draftsCreated: number;
   draftErrors: number;
-  processed: ProcessedEntry[]; // 이번 run 에서 처리한 메일들
+  processed: ProcessedEntry[];
 };
 
-export async function runAgentOnce(): Promise<AgentRunResult> {
+export async function runAgentOnce(userId: string): Promise<AgentRunResult> {
   const result: AgentRunResult = {
     ok: true,
     scanned: 0,
@@ -96,7 +87,7 @@ export async function runAgentOnce(): Promise<AgentRunResult> {
     processed: [],
   };
 
-  if (!(await isGmailConnected())) {
+  if (!(await isGmailConnected(userId))) {
     return { ...result, ok: false, error: "Gmail이 연결되지 않았습니다." };
   }
   const provider = await getActiveProvider();
@@ -104,31 +95,27 @@ export async function runAgentOnce(): Promise<AgentRunResult> {
     return {
       ...result,
       ok: false,
-      error:
-        "AI 키가 없습니다. /setup 에서 GEMINI_API_KEY(무료) 또는 OPENAI_API_KEY를 저장하세요.",
+      error: "AI 키가 없습니다. (분류기와 답장 작성에 필요)",
     };
   }
 
-  const ownEmail = await getConnectedEmail();
+  const ownEmail = await getConnectedEmail(userId);
 
-  // 최근 1일 받은편지함 메일 ID 목록 (읽음 처리 X)
-  // q="in:inbox newer_than:1d" — Gmail 검색 문법
-  const ids = await listRecentInboxMessageIds("in:inbox newer_than:1d");
+  const ids = await listRecentInboxMessageIds(userId, "in:inbox newer_than:1d");
   result.scanned = ids.length;
 
-  for (const { id, threadId } of ids) {
-    if (await hasSeenMessage(id)) {
+  for (const { id } of ids) {
+    if (await hasSeenMessage(userId, id)) {
       result.skippedSeen++;
       continue;
     }
-    const msg = await getMessage(id);
+    const msg = await getMessage(userId, id);
     if (!msg) continue;
 
     const fromAddress = extractEmailAddress(msg.from);
     if (shouldSkipBySender(fromAddress, ownEmail)) {
       result.skippedSender++;
-      // seen 으로 기록 (반복 호출 시 또 안 보게)
-      await recordProcessed({
+      await recordProcessed(userId, {
         id: msg.id,
         threadId: msg.threadId,
         from: msg.from,
@@ -159,7 +146,7 @@ export async function runAgentOnce(): Promise<AgentRunResult> {
         draftError = "답장 본문 생성 실패";
         result.draftErrors++;
       } else {
-        const drafted = await createReplyDraft({
+        const drafted = await createReplyDraft(userId, {
           to: fromAddress,
           subject: msg.subject.startsWith("Re:") ? msg.subject : `Re: ${msg.subject}`,
           body: replyBody,
@@ -186,13 +173,13 @@ export async function runAgentOnce(): Promise<AgentRunResult> {
       draftError,
       processedAt: new Date().toISOString(),
     };
-    await recordProcessed(entry);
+    await recordProcessed(userId, entry);
     result.processed.push(entry);
   }
 
   return result;
 }
 
-export async function getAgentLog(limit: number = 50) {
-  return getRecentProcessed(limit);
+export async function getAgentLog(userId: string, limit: number = 50) {
+  return getRecentProcessed(userId, limit);
 }

@@ -1,43 +1,70 @@
 import "server-only";
-import { loadStoredConfig, type ConfigKey } from "./config-store";
+import { loadGlobalConfig, loadUserConfig, type GlobalConfigKey, type UserConfigKey } from "./config-store";
 import { maskSecret } from "./crypto";
 
-// process.env 값이 있으면 우선. 없으면 저장된 config 값.
-// 둘 다 없으면 null → 호출 측에서 mock 모드로 동작한다.
-async function resolveValue(key: ConfigKey): Promise<string | null> {
+// process.env 값이 있으면 우선. 없으면 저장된 config.
+// LLM 키와 Google OAuth 앱은 global. 그 외 (Gmail token, SMTP, Kakao) 는 user-scoped.
+
+async function resolveGlobal(
+  key: GlobalConfigKey
+): Promise<string | null> {
   const env = process.env[key];
   if (env && env.trim()) return env;
-  const stored = await loadStoredConfig();
-  const v = stored[key];
-  return v && v.trim() ? v : null;
+  const g = await loadGlobalConfig();
+  return g[key] && g[key]!.trim() ? g[key]! : null;
 }
 
-// 어디서 왔는지(env / stored / none) 같이 알려주는 헬퍼.
-async function resolveWithSource(
-  key: ConfigKey
+async function resolveGlobalWithSource(
+  key: GlobalConfigKey
 ): Promise<{ value: string | null; source: "env" | "stored" | "none" }> {
   const env = process.env[key];
   if (env && env.trim()) return { value: env, source: "env" };
-  const stored = await loadStoredConfig();
-  const v = stored[key];
+  const g = await loadGlobalConfig();
+  const v = g[key];
   if (v && v.trim()) return { value: v, source: "stored" };
   return { value: null, source: "none" };
 }
 
+async function resolveUser(userId: string, key: UserConfigKey): Promise<string | null> {
+  // self 모드 호환: env 우선
+  if (userId === "_self") {
+    const env = process.env[key];
+    if (env && env.trim()) return env;
+  }
+  const u = await loadUserConfig(userId);
+  return u[key] && u[key]!.trim() ? u[key]! : null;
+}
+
+async function resolveUserWithSource(
+  userId: string,
+  key: UserConfigKey
+): Promise<{ value: string | null; source: "env" | "stored" | "none" }> {
+  if (userId === "_self") {
+    const env = process.env[key];
+    if (env && env.trim()) return { value: env, source: "env" };
+  }
+  const u = await loadUserConfig(userId);
+  const v = u[key];
+  if (v && v.trim()) return { value: v, source: "stored" };
+  return { value: null, source: "none" };
+}
+
+// ===== LLM (global) =====
+
 export async function getOpenAIKey(): Promise<string | null> {
-  return resolveValue("OPENAI_API_KEY");
+  return resolveGlobal("OPENAI_API_KEY");
 }
 
 export async function getGeminiKey(): Promise<string | null> {
-  return resolveValue("GEMINI_API_KEY");
+  return resolveGlobal("GEMINI_API_KEY");
 }
 
 export async function getGroqKey(): Promise<string | null> {
-  return resolveValue("GROQ_API_KEY");
+  return resolveGlobal("GROQ_API_KEY");
 }
 
-export async function getKakaoAccessToken(): Promise<string | null> {
-  return resolveValue("KAKAO_ACCESS_TOKEN");
+export async function getKakaoAccessToken(userId: string): Promise<string | null> {
+  return resolveUser(userId, "KAKAO_ACCESS_TOKEN");
 }
 
 export type SmtpConfig = {
@@ -48,13 +75,13 @@ export type SmtpConfig = {
   defaultTo: string | null;
 };
 
-export async function getSmtpConfig(): Promise<SmtpConfig | null> {
+export async function getSmtpConfig(userId: string): Promise<SmtpConfig | null> {
   const [host, portStr, user, pass, defaultTo] = await Promise.all([
-    resolveValue("SMTP_HOST"),
-    resolveValue("SMTP_PORT"),
-    resolveValue("SMTP_USER"),
-    resolveValue("SMTP_PASS"),
-    resolveValue("DEFAULT_TO_EMAIL"),
+    resolveUser(userId, "SMTP_HOST"),
+    resolveUser(userId, "SMTP_PORT"),
+    resolveUser(userId, "SMTP_USER"),
+    resolveUser(userId, "SMTP_PASS"),
+    resolveUser(userId, "DEFAULT_TO_EMAIL"),
   ]);
   if (!host || !user || !pass) return null;
   const port = Number(portStr ?? "587");
@@ -68,20 +95,15 @@ export async function getSmtpConfig(): Promise<SmtpConfig | null> {
 }
 
 export type RuntimeMode = "real" | "mock";
+export type RuntimeModes = { ai: RuntimeMode; email: RuntimeMode; kakao: RuntimeMode };
 
-export type RuntimeModes = {
-  ai: RuntimeMode;
-  email: RuntimeMode;
-  kakao: RuntimeMode;
-};
-
-export async function getRuntimeModes(): Promise<RuntimeModes> {
+export async function getRuntimeModes(userId: string): Promise<RuntimeModes> {
   const [openai, gemini, groq, smtp, kakao] = await Promise.all([
     getOpenAIKey(),
     getGeminiKey(),
     getGroqKey(),
-    getSmtpConfig(),
-    getKakaoAccessToken(),
+    getSmtpConfig(userId),
+    getKakaoAccessToken(userId),
   ]);
   return {
     ai: openai || gemini || groq ? "real" : "mock",
@@ -90,7 +112,8 @@ export async function getRuntimeModes(): Promise<RuntimeModes> {
   };
 }
 
-// /api/setup/status 가 쓰는 뷰
+// ===== /api/setup/status 뷰 =====
+
 export type SetupStatus = {
   openai: { configured: boolean; masked: string; source: "env" | "stored" | "none" };
   gemini: { configured: boolean; masked: string; source: "env" | "stored" | "none" };
@@ -115,36 +138,33 @@ export type SetupStatus = {
   modes: RuntimeModes;
   encryption: { configured: boolean };
   hasDefaultTo: boolean;
-  ownerEmail: string | null; // env 에서만 읽음 (보안상 마스킹 없이 노출 OK — 이메일 주소이지 비밀번호 아님)
+  ownerEmail: string | null;
 };
 
-export async function getSetupStatus(): Promise<SetupStatus> {
-  const [openai, gemini, groq, host, portStr, user, pass, defaultTo, kakao, gClientId, gClientSecret] =
+export async function getSetupStatus(userId: string): Promise<SetupStatus> {
+  const [openai, gemini, groq, gClientId, gClientSecret, host, portStr, user, pass, defaultTo, kakao] =
     await Promise.all([
-      resolveWithSource("OPENAI_API_KEY"),
-      resolveWithSource("GEMINI_API_KEY"),
-      resolveWithSource("GROQ_API_KEY"),
-      resolveWithSource("SMTP_HOST"),
-      resolveWithSource("SMTP_PORT"),
-      resolveWithSource("SMTP_USER"),
-      resolveWithSource("SMTP_PASS"),
-      resolveWithSource("DEFAULT_TO_EMAIL"),
-      resolveWithSource("KAKAO_ACCESS_TOKEN"),
-      resolveWithSource("GOOGLE_OAUTH_CLIENT_ID"),
-      resolveWithSource("GOOGLE_OAUTH_CLIENT_SECRET"),
+      resolveGlobalWithSource("OPENAI_API_KEY"),
+      resolveGlobalWithSource("GEMINI_API_KEY"),
+      resolveGlobalWithSource("GROQ_API_KEY"),
+      resolveGlobalWithSource("GOOGLE_OAUTH_CLIENT_ID"),
+      resolveGlobalWithSource("GOOGLE_OAUTH_CLIENT_SECRET"),
+      resolveUserWithSource(userId, "SMTP_HOST"),
+      resolveUserWithSource(userId, "SMTP_PORT"),
+      resolveUserWithSource(userId, "SMTP_USER"),
+      resolveUserWithSource(userId, "SMTP_PASS"),
+      resolveUserWithSource(userId, "DEFAULT_TO_EMAIL"),
+      resolveUserWithSource(userId, "KAKAO_ACCESS_TOKEN"),
     ]);
 
   const smtpConfigured = Boolean(host.value && user.value && pass.value);
   const smtpSources = new Set(
-    [host, user, pass]
-      .map((x) => x.source)
-      .filter((s) => s !== "none")
+    [host, user, pass].map((x) => x.source).filter((s) => s !== "none")
   );
   let smtpSource: SetupStatus["smtp"]["source"] = "none";
   if (smtpConfigured) {
-    smtpSource = smtpSources.size === 1
-      ? (smtpSources.has("env") ? "env" : "stored")
-      : "mixed";
+    smtpSource =
+      smtpSources.size === 1 ? (smtpSources.has("env") ? "env" : "stored") : "mixed";
   }
 
   const googleSources = new Set(
@@ -152,35 +172,21 @@ export async function getSetupStatus(): Promise<SetupStatus> {
   );
   let googleSource: SetupStatus["google"]["source"] = "none";
   if (gClientId.value && gClientSecret.value) {
-    googleSource = googleSources.size === 1
-      ? (googleSources.has("env") ? "env" : "stored")
-      : "mixed";
+    googleSource =
+      googleSources.size === 1 ? (googleSources.has("env") ? "env" : "stored") : "mixed";
   }
 
-  const modes = await getRuntimeModes();
+  const modes = await getRuntimeModes(userId);
 
-  // 활성 provider 결정: Groq > Gemini > OpenAI
   let activeProvider: SetupStatus["activeProvider"] = "none";
   if (groq.value) activeProvider = "groq";
   else if (gemini.value) activeProvider = "gemini";
   else if (openai.value) activeProvider = "openai";
 
   return {
-    openai: {
-      configured: Boolean(openai.value),
-      masked: maskSecret(openai.value),
-      source: openai.source,
-    },
-    gemini: {
-      configured: Boolean(gemini.value),
-      masked: maskSecret(gemini.value),
-      source: gemini.source,
-    },
-    groq: {
-      configured: Boolean(groq.value),
-      masked: maskSecret(groq.value),
-      source: groq.source,
-    },
+    openai: { configured: Boolean(openai.value), masked: maskSecret(openai.value), source: openai.source },
+    gemini: { configured: Boolean(gemini.value), masked: maskSecret(gemini.value), source: gemini.source },
+    groq: { configured: Boolean(groq.value), masked: maskSecret(groq.value), source: groq.source },
     activeProvider,
     google: {
       clientIdConfigured: Boolean(gClientId.value),
@@ -197,11 +203,7 @@ export async function getSetupStatus(): Promise<SetupStatus> {
       defaultToMasked: maskSecret(defaultTo.value),
       source: smtpSource,
     },
-    kakao: {
-      configured: Boolean(kakao.value),
-      masked: maskSecret(kakao.value),
-      source: kakao.source,
-    },
+    kakao: { configured: Boolean(kakao.value), masked: maskSecret(kakao.value), source: kakao.source },
     modes,
     encryption: { configured: Boolean(process.env.APP_ENCRYPTION_KEY) },
     hasDefaultTo: Boolean(defaultTo.value),
