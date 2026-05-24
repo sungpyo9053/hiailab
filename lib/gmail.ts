@@ -357,6 +357,13 @@ export async function createReplyDraft(opts: {
   return { ok: true, draftId: data.id };
 }
 
+// 한글이 들어간 헤더 값을 RFC2047 B-인코딩.
+function rfc2047(value: string): string {
+  // ASCII 만이면 그대로 (효율).
+  if (/^[\x20-\x7E]*$/.test(value)) return value;
+  return `=?UTF-8?B?${Buffer.from(value, "utf8").toString("base64")}?=`;
+}
+
 function buildRfc822(opts: {
   to: string;
   subject: string;
@@ -364,10 +371,8 @@ function buildRfc822(opts: {
   inReplyTo?: string;
 }): string {
   const lines: string[] = [];
-  lines.push(`To: ${opts.to}`);
-  // RFC2047 인코딩 (한글 제목 안전)
-  const encSubject = `=?UTF-8?B?${Buffer.from(opts.subject, "utf8").toString("base64")}?=`;
-  lines.push(`Subject: ${encSubject}`);
+  lines.push(`To: ${rfc2047(opts.to)}`);
+  lines.push(`Subject: ${rfc2047(opts.subject)}`);
   if (opts.inReplyTo) {
     lines.push(`In-Reply-To: ${opts.inReplyTo}`);
     lines.push(`References: ${opts.inReplyTo}`);

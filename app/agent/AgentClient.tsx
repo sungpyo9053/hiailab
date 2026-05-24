@@ -85,6 +85,8 @@ export default function AgentClient() {
       setMsg(`⚠ ${ERROR_LABEL[code] ?? code}`);
       window.history.replaceState({}, "", window.location.pathname);
     }
+    // 디버깅/캡처용: /agent?log=1 로 들어오면 처리 로그 펼침
+    if (q.get("log") === "1") setShowLog(true);
   }, []);
 
   async function handleToggle() {
