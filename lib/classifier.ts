@@ -17,14 +17,18 @@ const SYSTEM_PROMPT = [
   "needs_reply | newsletter | promotion | notification | spam | other",
   "",
   "기준:",
-  "- needs_reply: 사람(개인/업무)이 직접 보낸 질문/요청/회신 요망 메일",
+  "- needs_reply: 사람(개인/업무)이 직접 보낸 질문/요청/회신 요망 메일. 회의/일정 협의, 견적 문의, 답변 요청, 자료 요청 등.",
   "- newsletter: 정기 구독 발행물, 블로그 다이제스트, 매거진",
-  "- promotion: 광고, 할인, 쿠폰, 마케팅 캠페인",
+  "- promotion: 광고, 할인, 쿠폰, 마케팅 캠페인, '[광고]' 표기",
   "- notification: 자동 발송된 시스템 알림 (영수증, 가입 인증, 배송 알림, GitHub/Slack 알림 등)",
   "- spam: 분명한 스팸/피싱",
   "- other: 위 카테고리에 해당하지 않거나 판단이 어려운 경우",
   "",
-  "원칙: 답장이 필요할지 애매하면 needs_reply 대신 other 를 선택한다. (잘못된 자동 답장 초안 생성을 줄이기 위함)",
+  "원칙:",
+  "1. 본문 내용을 우선 판단한다. 발신자 도메인이 수신자와 같더라도(self-send) 본문이 비즈니스 회신 요청이면 needs_reply 로 분류한다.",
+  "2. 본문 내용이 회신 요망 신호 (가능한 시간 알려주세요, 회신 부탁드립니다, 의견 부탁합니다 등)를 분명히 포함하면 needs_reply.",
+  "3. 광고/뉴스레터/자동알림 패턴이 명확하면 사람-메일이 아니므로 needs_reply 가 아니다.",
+  "4. 위 모두 애매하면 other 를 선택한다.",
 ].join("\n");
 
 export async function classifyMail(input: {
