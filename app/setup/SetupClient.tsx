@@ -1,7 +1,6 @@
 "use client";
 
-// 주의: 클라이언트로 번들된다. lib/prompts.ts / lib/server-config.ts 등 서버 전용 모듈을 import 하지 말 것.
-// 비밀값 원문은 절대 받지 않고, 마스킹된 status 만 사용한다.
+// 클라이언트 전용. 비밀값 원문은 절대 받지 않고, 마스킹된 status 만 사용.
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -10,19 +9,17 @@ type Mode = "real" | "mock";
 
 type SetupStatus = {
   openai: { configured: boolean; masked: string; source: "env" | "stored" | "none" };
-  smtp: {
-    configured: boolean;
-    hostMasked: string;
-    port: number | null;
-    userMasked: string;
-    hasPass: boolean;
-    defaultToMasked: string;
+  google: {
+    clientIdConfigured: boolean;
+    clientSecretConfigured: boolean;
+    clientIdMasked: string;
     source: "env" | "stored" | "mixed" | "none";
   };
+  smtp: { configured: boolean };
   kakao: { configured: boolean; masked: string; source: "env" | "stored" | "none" };
   modes: { ai: Mode; email: Mode; kakao: Mode };
   encryption: { configured: boolean };
-  hasDefaultTo: boolean;
+  ownerEmail: string | null;
 };
 
 type SaveResp = { ok: true; status: SetupStatus } | { ok: false; error: string };
@@ -30,57 +27,20 @@ type TestResp =
   | { ok: true; mode: Mode; message: string }
   | { ok: false; mode?: Mode; error: string };
 
-function ModeBadge({ label, mode }: { label: string; mode: Mode | undefined }) {
-  if (!mode) return null;
-  const real = mode === "real";
-  return (
-    <span
-      className={
-        "rounded-full border px-2 py-0.5 text-[10px] font-semibold tracking-wide " +
-        (real
-          ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300"
-          : "border-yellow-400/30 bg-yellow-400/10 text-yellow-300")
-      }
-    >
-      {label} {real ? "REAL" : "MOCK"}
-    </span>
-  );
-}
-
-function StatusDot({ ok }: { ok: boolean }) {
-  return (
-    <span
-      className={
-        "inline-block h-2.5 w-2.5 rounded-full " +
-        (ok ? "bg-emerald-400" : "bg-white/20")
-      }
-    />
-  );
-}
-
 export default function SetupClient() {
   const [status, setStatus] = useState<SetupStatus | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(true);
 
-  // 입력 필드 (저장된 값은 받지 않으므로 항상 빈 문자열로 시작)
+  // 입력 필드
   const [openaiKey, setOpenaiKey] = useState("");
-  const [smtp, setSmtp] = useState({
-    SMTP_HOST: "",
-    SMTP_PORT: "",
-    SMTP_USER: "",
-    SMTP_PASS: "",
-    DEFAULT_TO_EMAIL: "",
-  });
-  const [kakaoToken, setKakaoToken] = useState("");
+  const [gClientId, setGClientId] = useState("");
+  const [gClientSecret, setGClientSecret] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
-  type ResultState = {
-    kind: "loading" | "success" | "error";
-    text: string;
-    mock?: boolean;
-  };
+  // 결과 상태
+  type ResultState = { kind: "loading" | "success" | "error"; text: string; mock?: boolean };
   const [openaiResult, setOpenaiResult] = useState<ResultState | null>(null);
-  const [smtpResult, setSmtpResult] = useState<ResultState | null>(null);
-  const [kakaoResult, setKakaoResult] = useState<ResultState | null>(null);
+  const [googleResult, setGoogleResult] = useState<ResultState | null>(null);
 
   async function refreshStatus() {
     setLoadingStatus(true);
@@ -120,27 +80,22 @@ export default function SetupClient() {
     }
   }
 
-  async function runTest(path: string, sectionResult: (r: ResultState) => void) {
-    sectionResult({ kind: "loading", text: "테스트 중…" });
+  async function testOpenAI() {
+    setOpenaiResult({ kind: "loading", text: "테스트 중…" });
     try {
-      const r = await fetch(path, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
+      const r = await fetch("/api/setup/test-openai", { method: "POST" });
       const data = (await r.json()) as TestResp;
-      if (!r.ok || !data.ok) {
-        const err = (data as { error?: string }).error ?? "테스트 실패";
-        sectionResult({ kind: "error", text: `✗ ${err}` });
+      if (!data.ok) {
+        setOpenaiResult({ kind: "error", text: `✗ ${(data as { error?: string }).error ?? "실패"}` });
         return;
       }
-      sectionResult({
+      setOpenaiResult({
         kind: "success",
         text: `✓ ${data.message}`,
         mock: data.mode === "mock",
       });
     } catch (e) {
-      sectionResult({ kind: "error", text: `✗ ${(e as Error).message}` });
+      setOpenaiResult({ kind: "error", text: `✗ ${(e as Error).message}` });
     }
   }
 
@@ -157,53 +112,63 @@ export default function SetupClient() {
     return <p className={"mt-3 text-sm " + color}>{r.text}</p>;
   }
 
-  // === 렌더링 ===
+  function StatusPill({ ok, ifTrue, ifFalse }: { ok: boolean; ifTrue: string; ifFalse: string }) {
+    return (
+      <span
+        className={
+          "rounded-full border px-2 py-0.5 text-[10px] font-semibold " +
+          (ok
+            ? "border-emerald-400/30 bg-emerald-400/10 text-emerald-300"
+            : "border-yellow-400/30 bg-yellow-400/10 text-yellow-300")
+        }
+      >
+        {ok ? ifTrue : ifFalse}
+      </span>
+    );
+  }
 
   return (
     <>
-      {/* 상단: 실행 모드 + 암호화 상태 */}
-      <section className="mb-6 flex flex-wrap items-center gap-3">
-        {status && (
-          <>
-            <ModeBadge label="AI" mode={status.modes.ai} />
-            <ModeBadge label="이메일" mode={status.modes.email} />
-            <ModeBadge label="카카오" mode={status.modes.kakao} />
-          </>
-        )}
-      </section>
-
-      {/* APP_ENCRYPTION_KEY 경고 */}
+      {/* 자물쇠 키 경고 */}
       {status && !status.encryption.configured && (
         <div className="mb-6 rounded-xl border border-red-400/30 bg-red-400/10 p-4 text-sm text-red-200">
-          <div className="font-semibold">⚠ APP_ENCRYPTION_KEY가 없습니다</div>
-          <p className="mt-1">
-            현재 설정값을 안전하게 저장할 수 없습니다. <code>.env.local</code>{" "}
-            파일에 다음 줄을 추가하고 <b>dev 서버를 재시작</b>한 뒤 다시 이
-            페이지로 오세요.
-          </p>
-          <pre className="mt-2 rounded-md bg-black/40 p-2 text-xs">
-            APP_ENCRYPTION_KEY=&lt;32바이트 이상 랜덤 문자열&gt;
-          </pre>
-          <p className="mt-1 text-xs text-red-300/80">
-            예시 생성: macOS/Linux 터미널에서{" "}
-            <code>openssl rand -base64 32</code>
+          <div className="font-semibold">⚠ 자물쇠 키(APP_ENCRYPTION_KEY)가 없어요</div>
+          <p className="mt-1 text-xs">
+            저장 버튼이 동작하지 않습니다. 서버의 <code>.env.local</code> 파일에 한 줄 추가하고 서버를 재시작해주세요.
+            <br />
+            <code className="rounded bg-black/40 px-1.5 py-0.5">openssl rand -base64 32</code>{" "}
+            의 결과를 <code className="rounded bg-black/40 px-1.5 py-0.5">APP_ENCRYPTION_KEY=...</code> 뒤에 붙여넣기.
           </p>
         </div>
       )}
 
-      {/* OpenAI */}
-      <SectionCard
-        title="1) OpenAI 설정"
-        helpHref="/docs/openai"
-        status={status?.openai.configured ? "ok" : "empty"}
-        mode={status?.modes.ai}
-        savedLine={
-          status?.openai.configured
-            ? `저장됨: ${status.openai.masked} (${status.openai.source})`
-            : "아직 설정되지 않음 — 비워두면 MOCK으로 동작합니다."
-        }
-      >
-        <label className="mb-1 block text-xs text-white/60">OPENAI_API_KEY</label>
+      {/* OWNER 안내 */}
+      {status?.ownerEmail && (
+        <div className="mb-4 rounded-lg border border-emerald-400/20 bg-emerald-400/5 px-3 py-2 text-xs text-emerald-200">
+          🔒 소유자 전용 모드: <b>{status.ownerEmail}</b> 만 Gmail 연결 가능
+        </div>
+      )}
+
+      {/* === 1) OpenAI === */}
+      <section className="mb-5 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+        <div className="mb-2 flex flex-wrap items-center gap-3">
+          <h2 className="text-base font-semibold">1) OpenAI API 키</h2>
+          {status && (
+            <StatusPill ok={status.openai.configured} ifTrue="저장됨" ifFalse="비어있음" />
+          )}
+        </div>
+        <p className="mb-3 text-xs text-white/60">
+          AI에게 답장 초안을 부탁할 때 사용합니다. <b>없으면 가짜 샘플(MOCK)만 출력</b>되고 실제 답장은 안 만들어져요.{" "}
+          <Link href="/docs/openai" className="underline text-white/70 hover:text-white">
+            발급 방법 보기
+          </Link>
+        </p>
+        {status?.openai.configured && (
+          <p className="mb-2 text-xs text-white/40">
+            현재 저장된 값: <code>{status.openai.masked}</code> ({status.openai.source})
+          </p>
+        )}
+        <label className="mb-1 block text-xs text-white/60">OpenAI에서 발급한 키 (sk-... 로 시작)</label>
         <input
           type="password"
           value={openaiKey}
@@ -215,8 +180,8 @@ export default function SetupClient() {
           <button
             onClick={() => {
               if (!openaiKey.trim() || !status?.encryption.configured) return;
-              void save({ OPENAI_API_KEY: openaiKey }, setOpenaiResult).then(
-                () => setOpenaiKey("")
+              void save({ OPENAI_API_KEY: openaiKey }, setOpenaiResult).then(() =>
+                setOpenaiKey("")
               );
             }}
             disabled={!openaiKey.trim() || !status?.encryption.configured}
@@ -225,139 +190,132 @@ export default function SetupClient() {
             저장
           </button>
           <button
-            onClick={() => void runTest("/api/setup/test-openai", setOpenaiResult)}
+            onClick={testOpenAI}
             className="rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/5"
           >
             연결 테스트
           </button>
         </div>
         <ResultLine r={openaiResult} />
-      </SectionCard>
+      </section>
 
-      {/* SMTP */}
-      <SectionCard
-        title="2) SMTP 이메일 설정"
-        helpHref="/docs/gmail"
-        status={status?.smtp.configured ? "ok" : "empty"}
-        mode={status?.modes.email}
-        savedLine={
-          status?.smtp.configured
-            ? `저장됨: ${status.smtp.userMasked} / 호스트 ${status.smtp.hostMasked}:${status.smtp.port ?? "?"} (${status.smtp.source})`
-            : "아직 설정되지 않음 — 비워두면 MOCK으로 동작합니다."
-        }
-      >
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Field
-            label="SMTP_HOST"
-            placeholder="smtp.gmail.com"
-            value={smtp.SMTP_HOST}
-            onChange={(v) => setSmtp({ ...smtp, SMTP_HOST: v })}
-          />
-          <Field
-            label="SMTP_PORT"
-            placeholder="587"
-            value={smtp.SMTP_PORT}
-            onChange={(v) => setSmtp({ ...smtp, SMTP_PORT: v })}
-          />
-          <Field
-            label="SMTP_USER"
-            placeholder="your@gmail.com"
-            value={smtp.SMTP_USER}
-            onChange={(v) => setSmtp({ ...smtp, SMTP_USER: v })}
-          />
-          <Field
-            label="SMTP_PASS (Gmail 앱 비밀번호)"
-            placeholder="xxxx xxxx xxxx xxxx"
-            type="password"
-            value={smtp.SMTP_PASS}
-            onChange={(v) => setSmtp({ ...smtp, SMTP_PASS: v })}
-          />
-          <Field
-            label="DEFAULT_TO_EMAIL"
-            placeholder="받을 기본 이메일 (선택)"
-            value={smtp.DEFAULT_TO_EMAIL}
-            onChange={(v) => setSmtp({ ...smtp, DEFAULT_TO_EMAIL: v })}
-            wide
-          />
+      {/* === 2) Google OAuth === */}
+      <section className="mb-5 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
+        <div className="mb-2 flex flex-wrap items-center gap-3">
+          <h2 className="text-base font-semibold">
+            2) Google 연결 (Gmail 자동 답장에 필요)
+          </h2>
+          {status && (
+            <StatusPill
+              ok={status.google.clientIdConfigured && status.google.clientSecretConfigured}
+              ifTrue="저장됨"
+              ifFalse="비어있음"
+            />
+          )}
         </div>
+        <p className="mb-3 text-xs leading-relaxed text-white/60">
+          Gmail 받은편지함을 읽고 임시보관함에 답장 초안을 만들려면 Google에게 본인 명의의 OAuth 앱이 한 번 필요합니다. 약 15분 클릭 작업 1회로 끝나요.
+          <br />
+          <Link href="/docs/setup-gmail-automation" className="underline text-white/70 hover:text-white">
+            클릭 가이드 보기 (Google Cloud Console 등록 7단계)
+          </Link>
+        </p>
+        {status?.google.clientIdConfigured && (
+          <p className="mb-2 text-xs text-white/40">
+            현재 저장됨 — Client ID: <code>{status.google.clientIdMasked}</code> · Secret:{" "}
+            {status.google.clientSecretConfigured ? "✓ 있음" : "✗ 비어있음"} ({status.google.source})
+          </p>
+        )}
+
+        <label className="mb-1 mt-2 block text-xs text-white/60">
+          Google Client ID (예: <code>123456-abc.apps.googleusercontent.com</code>)
+        </label>
+        <input
+          type="text"
+          value={gClientId}
+          onChange={(e) => setGClientId(e.target.value)}
+          placeholder="123456-abc.apps.googleusercontent.com"
+          className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
+        />
+
+        <label className="mb-1 mt-3 block text-xs text-white/60">
+          Google Client Secret (예: <code>GOCSPX-xxxx</code>)
+        </label>
+        <input
+          type="password"
+          value={gClientSecret}
+          onChange={(e) => setGClientSecret(e.target.value)}
+          placeholder="GOCSPX-xxxxxxxxxxxxxxxx"
+          className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
+        />
+
         <div className="mt-3 flex flex-wrap gap-2">
           <button
             onClick={() => {
               if (!status?.encryption.configured) return;
               const updates: Record<string, string> = {};
-              for (const [k, v] of Object.entries(smtp)) {
-                if (v.trim()) updates[k] = v.trim();
-              }
+              if (gClientId.trim()) updates.GOOGLE_OAUTH_CLIENT_ID = gClientId.trim();
+              if (gClientSecret.trim()) updates.GOOGLE_OAUTH_CLIENT_SECRET = gClientSecret.trim();
               if (Object.keys(updates).length === 0) return;
-              void save(updates, setSmtpResult).then(() =>
-                setSmtp({
-                  SMTP_HOST: "",
-                  SMTP_PORT: "",
-                  SMTP_USER: "",
-                  SMTP_PASS: "",
-                  DEFAULT_TO_EMAIL: "",
-                })
-              );
+              void save(updates, setGoogleResult).then(() => {
+                setGClientId("");
+                setGClientSecret("");
+              });
             }}
             disabled={!status?.encryption.configured}
             className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"
           >
             저장
           </button>
-          <button
-            onClick={() => void runTest("/api/setup/test-smtp", setSmtpResult)}
-            className="rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/5"
+          <Link
+            href="/agent"
+            className="rounded-lg border border-emerald-400/40 bg-emerald-400/10 px-4 py-2 text-sm text-emerald-200 hover:bg-emerald-400/15"
           >
-            연결 테스트 (메일 1통 발송)
-          </button>
+            저장 후 Gmail 연결하러 가기 →
+          </Link>
         </div>
-        <ResultLine r={smtpResult} />
-      </SectionCard>
+        <ResultLine r={googleResult} />
+      </section>
 
-      {/* Kakao */}
-      <SectionCard
-        title="3) 카카오톡 나에게 보내기 설정"
-        helpHref="/docs/kakao"
-        status={status?.kakao.configured ? "ok" : "empty"}
-        mode={status?.modes.kakao}
-        savedLine={
-          status?.kakao.configured
-            ? `저장됨: ${status.kakao.masked} (${status.kakao.source})`
-            : "아직 설정되지 않음 — 비워두면 MOCK으로 동작합니다."
-        }
-      >
-        <label className="mb-1 block text-xs text-white/60">
-          KAKAO_ACCESS_TOKEN (talk_message scope 필요, 수동 발급)
-        </label>
-        <input
-          type="password"
-          value={kakaoToken}
-          onChange={(e) => setKakaoToken(e.target.value)}
-          placeholder="액세스 토큰을 붙여넣으세요"
-          className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
-        />
-        <div className="mt-3 flex flex-wrap gap-2">
-          <button
-            onClick={() => {
-              if (!kakaoToken.trim() || !status?.encryption.configured) return;
-              void save({ KAKAO_ACCESS_TOKEN: kakaoToken }, setKakaoResult).then(
-                () => setKakaoToken("")
-              );
-            }}
-            disabled={!kakaoToken.trim() || !status?.encryption.configured}
-            className="rounded-lg bg-[var(--accent)] px-4 py-2 text-sm font-semibold text-black disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            저장
-          </button>
-          <button
-            onClick={() => void runTest("/api/setup/test-kakao", setKakaoResult)}
-            className="rounded-lg border border-white/20 px-4 py-2 text-sm hover:bg-white/5"
-          >
-            연결 테스트 (메시지 1건 발송)
-          </button>
-        </div>
-        <ResultLine r={kakaoResult} />
-      </SectionCard>
+      {/* === 고급 설정 (접힘) === */}
+      <section className="mb-5 rounded-2xl border border-white/5 bg-white/[0.02] p-4">
+        <button
+          onClick={() => setShowAdvanced((v) => !v)}
+          className="flex w-full items-center justify-between text-left text-sm text-white/50 hover:text-white/80"
+        >
+          <span>
+            🔧 고급 설정 (이메일 전송 / 카카오톡 — 자동 답장에는 필요 없음)
+          </span>
+          <span className="text-xs">{showAdvanced ? "접기 ▲" : "펼치기 ▼"}</span>
+        </button>
+
+        {showAdvanced && (
+          <div className="mt-4 space-y-3 border-t border-white/10 pt-4 text-xs text-white/60">
+            <p>
+              이 두 가지는 <b>자동 답장 에이전트와는 무관</b>합니다. 부가 기능 (
+              <Link href="/generators/email-reply" className="underline">수동 답장 자판기</Link> 등)을 사용하실 때
+              결과를 본인 이메일이나 카카오톡으로 받고 싶을 때만 채우세요.
+            </p>
+            <ul className="list-disc space-y-1 pl-5">
+              <li>
+                <b>이메일 전송 (SMTP)</b>:{" "}
+                <StatusPill ok={status?.smtp.configured ?? false} ifTrue="저장됨" ifFalse="비어있음" /> · 서버의{" "}
+                <code>.env.local</code> 에서 <code>SMTP_HOST / SMTP_USER / SMTP_PASS</code> 직접 편집 →{" "}
+                <Link href="/docs/gmail" className="underline">가이드</Link>
+              </li>
+              <li>
+                <b>카카오톡 나에게 보내기</b>:{" "}
+                <StatusPill ok={status?.kakao.configured ?? false} ifTrue="저장됨" ifFalse="비어있음" /> · 서버의{" "}
+                <code>.env.local</code> 에서 <code>KAKAO_ACCESS_TOKEN</code> 직접 편집 →{" "}
+                <Link href="/docs/kakao" className="underline">가이드</Link>
+              </li>
+            </ul>
+            <p className="text-white/40">
+              UI에서 직접 입력 받으면 비개발자가 헷갈리는 항목이 많아서, 고급 사용자가 서버에서 편집하도록 분리했습니다.
+            </p>
+          </div>
+        )}
+      </section>
 
       {loadingStatus && (
         <p className="text-xs text-white/40">현재 설정을 불러오는 중…</p>
@@ -365,80 +323,8 @@ export default function SetupClient() {
 
       <p className="mt-8 text-xs text-white/40">
         ※ 입력한 값은 외부로 전송되지 않으며, 이 서버의 <code>.hiailab/</code>{" "}
-        폴더(권한 600)에 AES-256-GCM 암호화되어 저장됩니다. 이 폴더는 Git에
-        커밋되지 않습니다.
-      </p>
-
-      <p className="mt-2 text-xs text-white/40">
-        도움말 문서: <Link href="/docs/openai" className="underline">OpenAI</Link>{" "}
-        · <Link href="/docs/gmail" className="underline">Gmail/SMTP</Link> ·{" "}
-        <Link href="/docs/kakao" className="underline">카카오</Link>
+        폴더(권한 600)에 AES-256-GCM 암호화되어 저장됩니다. Git에 절대 커밋되지 않습니다.
       </p>
     </>
-  );
-}
-
-function SectionCard({
-  title,
-  status,
-  mode,
-  savedLine,
-  helpHref,
-  children,
-}: {
-  title: string;
-  status: "ok" | "empty" | "warn";
-  mode?: Mode;
-  savedLine: string;
-  helpHref?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="mb-5 rounded-2xl border border-white/10 bg-white/[0.03] p-5">
-      <div className="mb-3 flex flex-wrap items-center gap-3">
-        <StatusDot ok={status === "ok"} />
-        <h2 className="text-base font-semibold">{title}</h2>
-        <ModeBadge label="" mode={mode} />
-        {helpHref && (
-          <Link
-            href={helpHref}
-            className="ml-auto text-xs text-white/40 underline hover:text-white"
-          >
-            도움말
-          </Link>
-        )}
-      </div>
-      <p className="mb-3 text-xs text-white/50">{savedLine}</p>
-      {children}
-    </section>
-  );
-}
-
-function Field({
-  label,
-  placeholder,
-  value,
-  onChange,
-  type = "text",
-  wide,
-}: {
-  label: string;
-  placeholder?: string;
-  value: string;
-  onChange: (v: string) => void;
-  type?: "text" | "password";
-  wide?: boolean;
-}) {
-  return (
-    <div className={wide ? "sm:col-span-2" : ""}>
-      <label className="mb-1 block text-xs text-white/60">{label}</label>
-      <input
-        type={type}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-        className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm outline-none focus:border-[var(--accent)]"
-      />
-    </div>
   );
 }

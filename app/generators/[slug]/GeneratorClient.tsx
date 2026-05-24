@@ -39,7 +39,7 @@ function ModeBadge({ label, mode }: { label: string; mode: Mode | undefined }) {
           : "border-yellow-400/30 bg-yellow-400/10 text-yellow-300")
       }
     >
-      {label} {real ? "REAL" : "MOCK"}
+      {label} {real ? "실제" : "샘플"}
     </span>
   );
 }
@@ -238,7 +238,7 @@ export default function GeneratorClient({
             <div className="flex items-center gap-2">
               {result.mode === "mock" && (
                 <span className="rounded-full bg-yellow-500/20 px-2 py-0.5 text-xs text-yellow-300">
-                  MOCK
+                  샘플
                 </span>
               )}
               <button

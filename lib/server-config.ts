@@ -83,6 +83,12 @@ export async function getRuntimeModes(): Promise<RuntimeModes> {
 // /api/setup/status 가 쓰는 뷰
 export type SetupStatus = {
   openai: { configured: boolean; masked: string; source: "env" | "stored" | "none" };
+  google: {
+    clientIdConfigured: boolean;
+    clientSecretConfigured: boolean;
+    clientIdMasked: string;
+    source: "env" | "stored" | "mixed" | "none";
+  };
   smtp: {
     configured: boolean;
     hostMasked: string;
@@ -96,10 +102,11 @@ export type SetupStatus = {
   modes: RuntimeModes;
   encryption: { configured: boolean };
   hasDefaultTo: boolean;
+  ownerEmail: string | null; // env 에서만 읽음 (보안상 마스킹 없이 노출 OK — 이메일 주소이지 비밀번호 아님)
 };
 
 export async function getSetupStatus(): Promise<SetupStatus> {
-  const [openai, host, portStr, user, pass, defaultTo, kakao] =
+  const [openai, host, portStr, user, pass, defaultTo, kakao, gClientId, gClientSecret] =
     await Promise.all([
       resolveWithSource("OPENAI_API_KEY"),
       resolveWithSource("SMTP_HOST"),
@@ -108,6 +115,8 @@ export async function getSetupStatus(): Promise<SetupStatus> {
       resolveWithSource("SMTP_PASS"),
       resolveWithSource("DEFAULT_TO_EMAIL"),
       resolveWithSource("KAKAO_ACCESS_TOKEN"),
+      resolveWithSource("GOOGLE_OAUTH_CLIENT_ID"),
+      resolveWithSource("GOOGLE_OAUTH_CLIENT_SECRET"),
     ]);
 
   const smtpConfigured = Boolean(host.value && user.value && pass.value);
@@ -118,11 +127,19 @@ export async function getSetupStatus(): Promise<SetupStatus> {
   );
   let smtpSource: SetupStatus["smtp"]["source"] = "none";
   if (smtpConfigured) {
-    if (smtpSources.size === 1) {
-      smtpSource = smtpSources.has("env") ? "env" : "stored";
-    } else {
-      smtpSource = "mixed";
-    }
+    smtpSource = smtpSources.size === 1
+      ? (smtpSources.has("env") ? "env" : "stored")
+      : "mixed";
+  }
+
+  const googleSources = new Set(
+    [gClientId, gClientSecret].map((x) => x.source).filter((s) => s !== "none")
+  );
+  let googleSource: SetupStatus["google"]["source"] = "none";
+  if (gClientId.value && gClientSecret.value) {
+    googleSource = googleSources.size === 1
+      ? (googleSources.has("env") ? "env" : "stored")
+      : "mixed";
   }
 
   const modes = await getRuntimeModes();
@@ -132,6 +149,12 @@ export async function getSetupStatus(): Promise<SetupStatus> {
       configured: Boolean(openai.value),
       masked: maskSecret(openai.value),
       source: openai.source,
+    },
+    google: {
+      clientIdConfigured: Boolean(gClientId.value),
+      clientSecretConfigured: Boolean(gClientSecret.value),
+      clientIdMasked: maskSecret(gClientId.value),
+      source: googleSource,
     },
     smtp: {
       configured: smtpConfigured,
@@ -150,5 +173,6 @@ export async function getSetupStatus(): Promise<SetupStatus> {
     modes,
     encryption: { configured: Boolean(process.env.APP_ENCRYPTION_KEY) },
     hasDefaultTo: Boolean(defaultTo.value),
+    ownerEmail: (process.env.OWNER_EMAIL || "").trim() || null,
   };
 }
