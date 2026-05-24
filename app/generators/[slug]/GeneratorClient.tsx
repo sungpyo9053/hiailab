@@ -114,7 +114,7 @@ export default function GeneratorClient({
       result.text,
       "-------------------",
       "",
-      "HiaiLab에서 발송됨",
+      "HI AI LAB에서 발송됨",
     ].join("\n");
   }
 
@@ -143,7 +143,7 @@ export default function GeneratorClient({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           to: emailTo.trim() || undefined,
-          subject: `[HiaiLab] ${generatorName} 결과`,
+          subject: `[HI AI LAB] ${generatorName} 결과`,
           content: buildEmailBody(),
         }),
       });
@@ -174,7 +174,7 @@ export default function GeneratorClient({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          title: "[HiaiLab] AI 결과 도착",
+          title: "[HI AI LAB] AI 결과 도착",
           content: buildKakaoBody(),
         }),
       });

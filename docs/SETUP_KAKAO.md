@@ -22,7 +22,7 @@
 
 1. <https://developers.kakao.com/> 접속 → 카카오 계정으로 로그인
 2. 상단 **내 애플리케이션** → **애플리케이션 추가하기**
-   - 앱 이름: `HiaiLab` (자유)
+   - 앱 이름: `HI AI LAB` (자유)
    - 회사명: 본인 이름 또는 아무거나
 3. 생성된 앱 클릭 → 좌측 **앱 설정 → 일반** 에서 `REST API 키` 메모해두기
    - 예: `abc123def456...`
@@ -77,7 +77,7 @@ curl -X POST "https://kauth.kakao.com/oauth/token" \
 
 ---
 
-## 3. HiaiLab에 토큰 저장
+## 3. HI AI LAB에 토큰 저장
 
 ### `/setup` 페이지에서
 
@@ -85,7 +85,7 @@ curl -X POST "https://kauth.kakao.com/oauth/token" \
 → 칸에 토큰 붙여넣고 **저장** → 배지가 `카카오 REAL` (초록) 로 바뀜
 → **연결 테스트 (메시지 1건 발송)** 클릭
 
-본인 카톡 "나와의 채팅" 에 **`[HiaiLab] 카카오 연결 테스트`** 메시지가 도착하면 성공입니다.
+본인 카톡 "나와의 채팅" 에 **`[HI AI LAB] 카카오 연결 테스트`** 메시지가 도착하면 성공입니다.
 
 ### `.env.local` 에 직접
 

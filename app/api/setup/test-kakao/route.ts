@@ -21,7 +21,7 @@ export async function POST() {
   const template = {
     object_type: "text",
     text:
-      "[HiaiLab] 카카오 연결 테스트\n\n" +
+      "[HI AI LAB] 카카오 연결 테스트\n\n" +
       "이 메시지가 보이면 카카오 액세스 토큰이 정상 동작합니다.",
     link: { web_url: linkUrl, mobile_web_url: linkUrl },
     button_title: "웹에서 보기",

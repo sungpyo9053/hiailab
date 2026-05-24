@@ -1,8 +1,8 @@
 # 🟢 OpenAI API 키 설정하기
 
-HiaiLab의 "뽑기" 결과를 진짜 AI가 만들도록 하려면 OpenAI API 키가 필요합니다.
+HI AI LAB의 "뽑기" 결과를 진짜 AI가 만들도록 하려면 OpenAI API 키가 필요합니다.
 
-> **키가 없어도 HiaiLab은 동작합니다.** (MOCK 결과로 나옵니다.)
+> **키가 없어도 HI AI LAB은 동작합니다.** (MOCK 결과로 나옵니다.)
 > 천천히 발급하셔도 됩니다.
 
 ---
@@ -32,7 +32,7 @@ HiaiLab의 "뽑기" 결과를 진짜 AI가 만들도록 하려면 OpenAI API 키
 
 ---
 
-## 3. HiaiLab에 키 넣는 방법
+## 3. HI AI LAB에 키 넣는 방법
 
 ### 방법 A — `/setup` 페이지에서 (가장 쉬움)
 
@@ -66,7 +66,7 @@ OPENAI_API_KEY=sk-abc123...
 
 ## 5. 비용은?
 
-HiaiLab은 기본적으로 **`gpt-4o-mini`** 모델을 사용합니다.
+HI AI LAB은 기본적으로 **`gpt-4o-mini`** 모델을 사용합니다.
 
 - 답장 자판기 1회: 보통 **₩1 미만**
 - 회의록 자판기 1회 (긴 회의록): **₩5 ~ 30** 정도

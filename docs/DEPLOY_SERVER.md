@@ -1,6 +1,6 @@
 # 🖥️ 개인 서버에 올리기 (Docker)
 
-HiaiLab을 본인의 VPS / 라즈베리파이 / 회사 안 서버 등에 올려서, 인터넷 어디서나 본인이 사용하는 방법입니다.
+HI AI LAB을 본인의 VPS / 라즈베리파이 / 회사 안 서버 등에 올려서, 인터넷 어디서나 본인이 사용하는 방법입니다.
 
 > 비전공자도 따라할 수 있도록 단계별로 풀어 적었습니다. 막히면 [FAQ](./FAQ.md) 참고.
 
@@ -52,7 +52,7 @@ docker compose version
 
 ---
 
-## 3. HiaiLab 코드 받기
+## 3. HI AI LAB 코드 받기
 
 서버 안에서:
 
@@ -138,7 +138,7 @@ QUICKSTART 의 6번 단계와 동일합니다.
 
 ## (선택) 8. 도메인 + HTTPS 붙이기
 
-HiaiLab을 본인의 도메인 (예: `vending.mysite.com`) 으로 띄우고 싶다면 nginx + Caddy + Traefik 같은 리버스 프록시를 앞단에 두는 것이 일반적입니다.
+HI AI LAB을 본인의 도메인 (예: `vending.mysite.com`) 으로 띄우고 싶다면 nginx + Caddy + Traefik 같은 리버스 프록시를 앞단에 두는 것이 일반적입니다.
 
 **가장 쉬운 방법은 Caddy** 입니다 (자동 HTTPS).
 

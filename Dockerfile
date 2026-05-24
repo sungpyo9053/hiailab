@@ -1,5 +1,5 @@
 # =========================================================
-# HiaiLab Dockerfile — Next.js standalone 출력 사용
+# HI AI LAB Dockerfile — Next.js standalone 출력 사용
 # 빌드:        docker build -t hiailab .
 # 실행:        docker run --rm -p 3000:3000 --env-file .env.local hiailab
 # compose 권장: docker compose up -d

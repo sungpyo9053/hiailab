@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   }
 
   // === REAL 모드 ===
-  const subject = body.subject?.trim() || "[HiaiLab] AI 결과";
+  const subject = body.subject?.trim() || "[HI AI LAB] AI 결과";
   const to = (body.to && body.to.trim()) || smtp.defaultTo || "";
 
   if (!to || !isLikelyEmail(to)) {
@@ -65,7 +65,7 @@ export async function POST(req: NextRequest) {
 
   try {
     await transporter.sendMail({
-      from: `"HiaiLab" <${smtp.user}>`,
+      from: `"HI AI LAB" <${smtp.user}>`,
       to,
       subject,
       text: content,
