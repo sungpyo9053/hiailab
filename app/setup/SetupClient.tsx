@@ -159,9 +159,14 @@ export default function SetupClient() {
         </div>
         <p className="mb-3 text-xs text-white/60">
           AI에게 답장 초안을 부탁할 때 사용합니다. <b>없으면 가짜 샘플(MOCK)만 출력</b>되고 실제 답장은 안 만들어져요.{" "}
-          <Link href="/docs/openai" className="underline text-white/70 hover:text-white">
-            발급 방법 보기
-          </Link>
+          <a
+            href="https://github.com/sungpyo9053/hiailab/blob/main/docs/SETUP_OPENAI.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline text-white/70 hover:text-white"
+          >
+            발급 방법 보기 ↗
+          </a>
         </p>
         {status?.openai.configured && (
           <p className="mb-2 text-xs text-white/40">
@@ -216,9 +221,14 @@ export default function SetupClient() {
         <p className="mb-3 text-xs leading-relaxed text-white/60">
           Gmail 받은편지함을 읽고 임시보관함에 답장 초안을 만들려면 Google에게 본인 명의의 OAuth 앱이 한 번 필요합니다. 약 15분 클릭 작업 1회로 끝나요.
           <br />
-          <Link href="/docs/setup-gmail-automation" className="underline text-white/70 hover:text-white">
-            클릭 가이드 보기 (Google Cloud Console 등록 7단계)
-          </Link>
+          <a
+            href="https://github.com/sungpyo9053/hiailab/blob/main/docs/SETUP_GMAIL_AUTOMATION.md"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="underline text-white/70 hover:text-white"
+          >
+            클릭 가이드 보기 ↗ (Google Cloud Console 등록 7단계)
+          </a>
         </p>
         {status?.google.clientIdConfigured && (
           <p className="mb-2 text-xs text-white/40">
@@ -301,13 +311,27 @@ export default function SetupClient() {
                 <b>이메일 전송 (SMTP)</b>:{" "}
                 <StatusPill ok={status?.smtp.configured ?? false} ifTrue="저장됨" ifFalse="비어있음" /> · 서버의{" "}
                 <code>.env.local</code> 에서 <code>SMTP_HOST / SMTP_USER / SMTP_PASS</code> 직접 편집 →{" "}
-                <Link href="/docs/gmail" className="underline">가이드</Link>
+                <a
+                  href="https://github.com/sungpyo9053/hiailab/blob/main/docs/SETUP_GMAIL.md"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  가이드 ↗
+                </a>
               </li>
               <li>
                 <b>카카오톡 나에게 보내기</b>:{" "}
                 <StatusPill ok={status?.kakao.configured ?? false} ifTrue="저장됨" ifFalse="비어있음" /> · 서버의{" "}
                 <code>.env.local</code> 에서 <code>KAKAO_ACCESS_TOKEN</code> 직접 편집 →{" "}
-                <Link href="/docs/kakao" className="underline">가이드</Link>
+                <a
+                  href="https://github.com/sungpyo9053/hiailab/blob/main/docs/SETUP_KAKAO.md"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline"
+                >
+                  가이드 ↗
+                </a>
               </li>
             </ul>
             <p className="text-white/40">
