@@ -1,62 +1,61 @@
 @import "tailwindcss";
 @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@latest/dist/web/static/pretendard.css");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500&display=swap");
 
 /* =========================================================
-   HI AI LAB — ncloud의 단정함 + 2026 트렌드 (Bento / Glass / Big Bold / Animated)
-   Primary    : #7C3AED (Violet 600) — AI 시그니처
-   Hot        : #EC4899 (Pink 500) — 포인트 그라데이션 끝점
-   Background : #FFFFFF + #F7F7FB (옅은 라일락)
+   HI AI LAB — Toss / Linear / Stripe / Framer 풍 다크 네이비 SaaS
    ========================================================= */
 
 :root {
-  --background: #ffffff;
-  --background-soft: #f7f7fb;
-  --background-deep: #efeff5;
-  --background-card: #ffffff;
+  /* 다크 네이비 베이스 */
+  --background: #0a0e1a;
+  --background-soft: #0f1424;
+  --background-elev: #161b2e;
+  --background-card: rgba(22, 27, 46, 0.6);
+  --background-glass: rgba(255, 255, 255, 0.03);
 
-  --foreground: #16171a;
-  --foreground-soft: #555c66;
-  --foreground-muted: #98a0a8;
+  --foreground: #f5f6fa;
+  --foreground-soft: #a8aec4;
+  --foreground-muted: #6b7088;
+  --foreground-dim: #4a4f66;
 
-  /* Primary — Vivid Violet (AI 톤) */
-  --accent: #7c3aed;
-  --accent-strong: #6d28d9;
-  --accent-deep: #4c1d95;
-  --accent-soft: #f1ebff;
+  /* Primary — 블루+퍼플 그라데이션 */
+  --accent: #6366f1;
+  --accent-strong: #4f46e5;
+  --accent-deep: #3730a3;
+  --accent-soft: rgba(99, 102, 241, 0.12);
   --accent-foreground: #ffffff;
 
-  /* Hot Accent — Pink (그라데이션 끝점 / CTA) */
-  --hot: #ec4899;
-  --hot-strong: #db2777;
-  --hot-soft: #fce7f3;
-  --hot-foreground: #831843;
-
-  /* Warm — Blue (보조) */
+  /* 보조 */
+  --hot: #8b5cf6;
+  --hot-soft: rgba(139, 92, 246, 0.12);
   --warm: #3b82f6;
-  --warm-strong: #2563eb;
-  --warm-soft: #e0eaff;
-  --warm-foreground: #1e3a8a;
+  --warm-soft: rgba(59, 130, 246, 0.12);
 
   --success: #10b981;
-  --success-soft: #d1fae5;
+  --success-soft: rgba(16, 185, 129, 0.12);
   --warning: #f59e0b;
-  --warning-soft: #fef3c7;
-  --danger: #e5484d;
-  --danger-soft: #ffe4e5;
+  --warning-soft: rgba(245, 158, 11, 0.12);
+  --danger: #ef4444;
+  --danger-soft: rgba(239, 68, 68, 0.12);
 
-  --border: #e5e7eb;
-  --border-soft: #f0f2f4;
-  --shadow-sm: 0 1px 2px rgba(20, 20, 50, 0.04);
-  --shadow: 0 4px 14px rgba(20, 20, 50, 0.07);
-  --shadow-lg: 0 16px 40px rgba(20, 20, 50, 0.1);
+  --border: rgba(255, 255, 255, 0.08);
+  --border-soft: rgba(255, 255, 255, 0.04);
+  --border-strong: rgba(255, 255, 255, 0.14);
 
-  /* AI 시그니처 그라데이션 */
-  --gradient-hero: linear-gradient(135deg, #7c3aed 0%, #ec4899 100%);
-  --gradient-soft: linear-gradient(180deg, #f1ebff 0%, #ffffff 100%);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 80px rgba(99, 102, 241, 0.25);
+
+  --gradient-hero: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 50%, #ec4899 100%);
+  --gradient-blue: linear-gradient(135deg, #3b82f6 0%, #6366f1 100%);
+  --gradient-purple: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --gradient-radial: radial-gradient(1200px at 50% -200px, rgba(99, 102, 241, 0.25), transparent 70%);
 }
 
 html {
-  color-scheme: light;
+  color-scheme: dark;
 }
 html,
 body {
@@ -65,7 +64,36 @@ body {
   min-height: 100%;
 }
 
-/* 폼 요소 다크 모드 자동 반전 방지 */
+body {
+  font-family:
+    "Pretendard Variable",
+    Pretendard,
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Apple SD Gothic Neo",
+    "Noto Sans KR",
+    sans-serif;
+  font-feature-settings: "tnum" 1, "ss06" 1, "cv11" 1;
+  letter-spacing: -0.012em;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === Reduced motion 대응 === */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* === 폼 요소 === */
 input,
 textarea,
 select,
@@ -73,6 +101,7 @@ button {
   color: var(--foreground);
   background-color: transparent;
   -webkit-text-fill-color: var(--foreground);
+  font-family: inherit;
 }
 input::placeholder,
 textarea::placeholder {
@@ -86,42 +115,38 @@ input[type="search"],
 input[type="url"],
 input[type="number"],
 textarea {
-  background-color: #ffffff !important;
+  background-color: var(--background-elev) !important;
   -webkit-text-fill-color: var(--foreground);
+  border: 1px solid var(--border);
 }
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
   -webkit-text-fill-color: var(--foreground);
-  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset;
+  -webkit-box-shadow: 0 0 0px 1000px var(--background-elev) inset;
   caret-color: var(--foreground);
 }
 
-body {
-  font-family:
-    "Pretendard Variable",
-    Pretendard,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Apple SD Gothic Neo",
-    "Noto Sans KR",
-    "Segoe UI",
-    Roboto,
-    sans-serif;
-  font-feature-settings: "tnum" 1, "ss06" 1;
-  letter-spacing: -0.015em;
-  font-weight: 400;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* === 영웅 헤드라인 (Big Bold) === */
+/* === 영웅 타이포 === */
 .bm-hand,
 .bm-hero {
-  font-family: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+  font-family: "Pretendard Variable", Pretendard, "Inter", system-ui, sans-serif;
   font-weight: 800;
-  letter-spacing: -0.028em;
-  line-height: 1.1;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+}
+
+.mono {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-feature-settings: "calt" 0;
+}
+
+/* === Glass (약하게) === */
+.bm-glass {
+  background: rgba(10, 14, 26, 0.72);
+  backdrop-filter: blur(18px) saturate(150%);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  border-bottom: 1px solid var(--border);
 }
 
 /* === 그라데이션 텍스트 === */
@@ -133,202 +158,210 @@ body {
   color: transparent;
 }
 
-/* === Glassmorphism (sticky nav) === */
-.bm-glass {
-  background: rgba(255, 255, 255, 0.72);
-  backdrop-filter: blur(20px) saturate(180%);
-  -webkit-backdrop-filter: blur(20px) saturate(180%);
-  border-bottom: 1px solid rgba(229, 231, 235, 0.6);
-}
-
-/* === Bento Cards === */
-.bm-bento {
-  border-radius: 20px;
-  background: var(--background-card);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
-  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s, border-color 0.25s;
-  overflow: hidden;
-}
-.bm-bento:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
-  border-color: color-mix(in srgb, var(--accent) 35%, var(--border));
-}
-.bm-bento-hero {
-  border-radius: 20px;
-  background: var(--gradient-hero);
-  color: white;
-  box-shadow: 0 20px 60px rgba(124, 58, 237, 0.35);
-  overflow: hidden;
-}
-.bm-bento-soft {
-  border-radius: 20px;
-  background: var(--accent-soft);
-  border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
-  box-shadow: var(--shadow-sm);
-}
-
-/* === 일반 카드 (ncloud 풍) === */
+/* === 카드 (다크 elevated) === */
 .bm-card {
-  background: var(--background-card);
+  background: var(--background-elev);
   border: 1px solid var(--border);
-  border-radius: 12px;
-  box-shadow: var(--shadow-sm);
-  transition: border-color 0.15s, box-shadow 0.15s;
+  border-radius: 16px;
+  transition: border-color 0.2s, transform 0.2s;
 }
 .bm-card:hover {
-  border-color: color-mix(in srgb, var(--accent) 30%, var(--border));
-  box-shadow: var(--shadow);
+  border-color: var(--border-strong);
 }
+
+.bm-card-glass {
+  background: var(--background-glass);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  backdrop-filter: blur(8px);
+}
+
 .bm-card-soft {
   background: var(--background-soft);
   border: 1px solid var(--border-soft);
   border-radius: 12px;
 }
-.bm-card-hero {
-  background: var(--gradient-soft);
+
+/* === Bento (다크) === */
+.bm-bento {
+  background: var(--background-elev);
   border: 1px solid var(--border);
-  border-radius: 16px;
-  box-shadow: var(--shadow);
+  border-radius: 20px;
+  transition: border-color 0.2s, transform 0.2s;
+  overflow: hidden;
+}
+.bm-bento:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
 }
 
-/* === Animated background blob === */
-.bm-blob {
-  position: absolute;
+/* === Mock UI (대시보드 목업) === */
+.bm-mock {
+  background: linear-gradient(180deg, #14182b 0%, #0f1424 100%);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lg), var(--shadow-glow);
+  overflow: hidden;
+}
+.bm-mock-header {
+  background: var(--background-soft);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.bm-mock-dot {
+  width: 10px;
+  height: 10px;
   border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.55;
-  pointer-events: none;
-  animation: bm-blob-float 18s ease-in-out infinite;
-}
-@keyframes bm-blob-float {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(40px, -60px) scale(1.15); }
-  66% { transform: translate(-30px, 40px) scale(0.92); }
-}
-@keyframes bm-blob-float-slow {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(-50px, 30px) scale(1.1); }
 }
 
 /* === 버튼 === */
 .bm-btn-primary {
-  background: var(--accent);
+  background: var(--gradient-blue);
   color: #ffffff;
   border-radius: 10px;
   padding: 11px 22px;
-  font-weight: 700;
+  font-weight: 600;
   font-size: 14px;
   letter-spacing: -0.012em;
-  transition: filter 0.15s, transform 0.05s, box-shadow 0.15s;
-  box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 30%, transparent);
+  transition: filter 0.15s, transform 0.05s, box-shadow 0.2s;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 .bm-btn-primary:hover {
-  filter: brightness(1.08);
-  box-shadow: 0 6px 20px color-mix(in srgb, var(--accent) 40%, transparent);
+  filter: brightness(1.1);
+  box-shadow: 0 8px 28px rgba(99, 102, 241, 0.45);
 }
 .bm-btn-primary:active {
   transform: translateY(1px);
 }
 .bm-btn-primary:disabled {
-  background: var(--border);
+  background: var(--background-elev);
   color: var(--foreground-muted);
   cursor: not-allowed;
   box-shadow: none;
   filter: none;
 }
 
-/* Hot 버튼 — 대표 CTA (그라데이션) */
 .bm-btn-hot {
   background: var(--gradient-hero);
   color: #ffffff;
   border-radius: 10px;
-  padding: 12px 24px;
-  font-weight: 700;
+  padding: 12px 26px;
+  font-weight: 600;
   font-size: 14px;
-  letter-spacing: -0.012em;
-  transition: filter 0.15s, transform 0.05s, box-shadow 0.15s;
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent);
+  transition: filter 0.15s, transform 0.05s, box-shadow 0.2s;
+  box-shadow: 0 4px 14px rgba(139, 92, 246, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 .bm-btn-hot:hover {
-  filter: brightness(1.06);
-  box-shadow: 0 8px 24px color-mix(in srgb, var(--hot) 45%, transparent);
+  filter: brightness(1.08);
+  box-shadow: 0 10px 32px rgba(139, 92, 246, 0.5);
 }
 .bm-btn-hot:active {
   transform: translateY(1px);
 }
 
 .bm-btn-secondary {
-  background: #ffffff;
+  background: var(--background-elev);
   color: var(--foreground);
   border: 1px solid var(--border);
   border-radius: 10px;
   padding: 10px 18px;
-  font-weight: 600;
+  font-weight: 500;
   font-size: 13px;
   transition: background 0.15s, border-color 0.15s;
 }
 .bm-btn-secondary:hover {
   background: var(--background-soft);
-  border-color: var(--accent);
-  color: var(--accent-deep);
+  border-color: var(--border-strong);
 }
 
-.bm-btn-warm {
-  background: var(--warm);
-  color: #ffffff;
-  border-radius: 10px;
-  padding: 10px 18px;
-  font-weight: 700;
+.bm-btn-ghost {
+  background: transparent;
+  color: var(--foreground-soft);
+  padding: 8px 14px;
+  font-weight: 500;
   font-size: 13px;
-  border: 1px solid var(--warm-strong);
+  border-radius: 8px;
+  transition: color 0.15s, background 0.15s;
 }
-.bm-btn-warm:hover {
-  filter: brightness(1.06);
+.bm-btn-ghost:hover {
+  color: var(--foreground);
+  background: var(--background-elev);
 }
 
-/* === 칩 (배지) === */
+/* === 칩 === */
 .bm-chip {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   padding: 4px 10px;
   border-radius: 999px;
   font-size: 11px;
-  font-weight: 600;
-  background: var(--background-soft);
+  font-weight: 500;
+  background: var(--background-elev);
   color: var(--foreground-soft);
   border: 1px solid var(--border);
-  letter-spacing: -0.005em;
 }
 .bm-chip-accent {
   background: var(--accent-soft);
-  color: var(--accent-deep);
-  border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
+  color: #a5b4fc;
+  border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
 }
 .bm-chip-hot {
   background: var(--hot-soft);
-  color: var(--hot-strong);
-  border: 1px solid color-mix(in srgb, var(--hot) 40%, transparent);
-}
-.bm-chip-warm {
-  background: var(--warm-soft);
-  color: var(--warm-foreground);
-  border: 1px solid color-mix(in srgb, var(--warm) 50%, transparent);
+  color: #c4b5fd;
+  border: 1px solid color-mix(in srgb, var(--hot) 30%, transparent);
 }
 .bm-chip-success {
   background: var(--success-soft);
-  color: #065f46;
-  border: 1px solid color-mix(in srgb, var(--success) 35%, transparent);
+  color: #6ee7b7;
+  border: 1px solid color-mix(in srgb, var(--success) 30%, transparent);
+}
+.bm-chip-warm {
+  background: var(--warm-soft);
+  color: #93c5fd;
+  border: 1px solid color-mix(in srgb, var(--warm) 30%, transparent);
 }
 .bm-chip-warn {
   background: var(--warning-soft);
-  color: #92400e;
-  border: 1px solid color-mix(in srgb, var(--warning) 35%, transparent);
+  color: #fcd34d;
+  border: 1px solid color-mix(in srgb, var(--warning) 30%, transparent);
 }
 .bm-chip-danger {
   background: var(--danger-soft);
-  color: #991b1b;
-  border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent);
+  color: #fca5a5;
+  border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+}
+
+/* === Glow / Aurora 배경 (Hero용) === */
+.bm-aurora {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* === Subtle dot grid 배경 === */
+.bm-dotgrid {
+  background-image: radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.06) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* === floating animation (mock UI 살짝 떠있는 느낌) === */
+@keyframes bm-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+.bm-floating {
+  animation: bm-float 6s ease-in-out infinite;
+}
+
+/* === pipeline 라인 그리기 === */
+@keyframes bm-line-draw {
+  to { stroke-dashoffset: 0; }
 }
