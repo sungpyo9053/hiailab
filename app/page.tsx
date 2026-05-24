@@ -1,8 +1,9 @@
 import Link from "next/link";
 import AgentClient from "./agent/AgentClient";
+import OnboardingPipeline from "./OnboardingPipeline";
 
 // 메인 = 자동 답장 에이전트.
-// 사용자 요청대로 다른 자판기(수동 답장/회의록/카피)는 footer 링크로만 노출.
+// 셋업 진행 파이프라인(상단) + 실제 에이전트 상태(하단).
 export default function HomePage() {
   return (
     <main className="mx-auto max-w-3xl px-5 py-10">
@@ -25,6 +26,9 @@ export default function HomePage() {
           🛠️ 설정
         </Link>
       </header>
+
+      {/* 셋업 6단계 파이프라인 — 처음 보는 사람도 다음에 뭘 해야 하는지 한눈에 */}
+      <OnboardingPipeline />
 
       <AgentClient />
 
