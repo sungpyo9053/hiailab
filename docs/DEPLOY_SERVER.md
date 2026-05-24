@@ -61,7 +61,7 @@ docker compose version
 sudo apt update && sudo apt install -y git
 
 # 코드 받기
-git clone https://github.com/<당신의-깃허브-아이디>/autovending.git
+git clone https://github.com/sungpyo9053/autovending.git
 cd autovending
 ```
 

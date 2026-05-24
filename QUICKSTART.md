@@ -28,11 +28,9 @@
 터미널에 아래를 그대로 붙여넣습니다.
 
 ```bash
-git clone https://github.com/<당신의-깃허브-아이디>/autovending.git
+git clone https://github.com/sungpyo9053/autovending.git
 cd autovending
 ```
-
-`<당신의-깃허브-아이디>`는 영상에서 안내해 드리는 값을 넣으세요.
 
 ### 방법 B — Git을 모르는 경우 (ZIP)
 

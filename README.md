@@ -48,7 +48,7 @@
 
 ```bash
 # 1) 코드 받기 (Git 사용)
-git clone https://github.com/<당신의-깃허브-아이디>/autovending.git
+git clone https://github.com/sungpyo9053/autovending.git
 cd autovending
 
 # 2) 환경변수 파일 만들기
